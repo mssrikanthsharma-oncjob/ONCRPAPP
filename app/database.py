@@ -9,6 +9,7 @@ def init_database():
     # Create all tables
     db.create_all()
     
+    # Always recreate demo data for production (since we use in-memory SQLite)
     # Check if demo users already exist
     admin_user = User.query.filter_by(username='admin').first()
     sales_user = User.query.filter_by(username='sales').first()
@@ -39,7 +40,7 @@ def init_database():
         print(f"Error creating users: {e}")
         raise
     
-    # Create dummy bookings if they don't exist
+    # Always create dummy bookings (important for in-memory database)
     if Booking.query.count() == 0:
         create_dummy_bookings()
     
