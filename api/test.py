@@ -9,7 +9,3 @@ def hello():
 @app.route('/health')
 def health():
     return {'status': 'healthy', 'message': 'Test API is working'}
-
-# For Vercel
-def handler(event, context):
-    return app
