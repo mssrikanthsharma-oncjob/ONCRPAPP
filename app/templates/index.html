@@ -2,9 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>ONC REALTY PARTNERS - Booking System</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- PWA and mobile optimization meta tags -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="ONC Realty">
+    <meta name="mobile-web-app-capable" content="yes">
+</head>
 </head>
 <body>
     <!-- Login Container -->
@@ -60,17 +67,17 @@
             <!-- Bookings Tab -->
             <div id="bookings-tab" class="tab-content active">
                 <div class="card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div class="booking-header">
                         <h2>Booking Management</h2>
                         <button id="add-booking-btn" class="btn btn-primary">Add New Booking</button>
                     </div>
                     
-                    <div class="form-row">
+                    <div class="search-filters">
                         <div class="form-group">
-                            <input type="text" id="search-input" placeholder="Search bookings..." style="margin-bottom: 0;">
+                            <input type="text" id="search-input" placeholder="Search bookings..." aria-label="Search bookings">
                         </div>
                         <div class="form-group">
-                            <select id="status-filter" style="padding: 12px; border: 2px solid #e1e1e1; border-radius: 5px; margin-bottom: 0;">
+                            <select id="status-filter" aria-label="Filter by status">
                                 <option value="">All Status</option>
                                 <option value="active">Active</option>
                                 <option value="complete">Complete</option>
@@ -80,17 +87,17 @@
                     </div>
 
                     <div class="table-container">
-                        <table class="table">
+                        <table class="table" role="table">
                             <thead>
                                 <tr>
-                                    <th onclick="app.sortTable('customer_name')">Customer Name</th>
-                                    <th onclick="app.sortTable('project_name')">Project</th>
-                                    <th onclick="app.sortTable('contact_number')">Contact</th>
-                                    <th onclick="app.sortTable('type')">Type</th>
-                                    <th onclick="app.sortTable('amount')">Amount</th>
-                                    <th onclick="app.sortTable('status')">Status</th>
-                                    <th onclick="app.sortTable('timeline')">Timeline</th>
-                                    <th>Actions</th>
+                                    <th onclick="app.sortTable('customer_name')" role="columnheader" tabindex="0">Customer Name</th>
+                                    <th onclick="app.sortTable('project_name')" role="columnheader" tabindex="0">Project</th>
+                                    <th onclick="app.sortTable('contact_number')" role="columnheader" tabindex="0">Contact</th>
+                                    <th onclick="app.sortTable('type')" role="columnheader" tabindex="0">Type</th>
+                                    <th onclick="app.sortTable('amount')" role="columnheader" tabindex="0">Amount</th>
+                                    <th onclick="app.sortTable('status')" role="columnheader" tabindex="0">Status</th>
+                                    <th onclick="app.sortTable('timeline')" role="columnheader" tabindex="0">Timeline</th>
+                                    <th role="columnheader">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="bookings-tbody">

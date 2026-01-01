@@ -356,22 +356,509 @@ body {
     font-size: 14px;
 }
 
-/* Responsive */
+/* Touch and accessibility improvements */
+.table th[onclick] {
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s;
+}
+
+.table th[onclick]:hover {
+    background: #e9ecef;
+}
+
+.table th[onclick]:focus {
+    outline: 2px solid #667eea;
+    outline-offset: -2px;
+}
+
+.btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: 10px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+/* Improve touch targets */
+.nav-tab {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.nav-tab:focus {
+    outline: 2px solid #667eea;
+    outline-offset: -2px;
+}
+
+.logout-btn:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.8);
+    outline-offset: 2px;
+}
+
+/* Improve form accessibility */
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Status badges with better contrast */
+.status-active {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-complete {
+    background-color: #cce5ff;
+    color: #004085;
+    border: 1px solid #b3d7ff;
+}
+
+.status-cancelled {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f1b0b7;
+}
+
+/* Booking header and search filters */
+.booking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.search-filters {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.search-filters .form-group {
+    flex: 1;
+    min-width: 200px;
+    margin-bottom: 0;
+}
+
+.search-filters input,
+.search-filters select {
+    padding: 12px;
+    border: 2px solid #e1e1e1;
+    border-radius: 5px;
+    margin-bottom: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Mobile-First Responsive Design */
+
+/* Base mobile styles (320px and up) */
 @media (max-width: 768px) {
-    .form-row {
+    body {
+        padding: 0;
+        margin: 0;
+        min-height: 100vh;
+        align-items: stretch;
+        justify-content: stretch;
+    }
+
+    .container {
+        margin: 0;
+        border-radius: 0;
+        max-width: 100%;
+        min-height: 100vh;
+        display: flex;
         flex-direction: column;
     }
-    
+
+    .header {
+        padding: 20px 15px;
+        border-radius: 0;
+    }
+
+    .header h1 {
+        font-size: 20px;
+    }
+
+    .header p {
+        font-size: 13px;
+    }
+
+    .form-container {
+        padding: 20px 15px;
+        flex: 1;
+    }
+
+    .form-group input {
+        padding: 14px;
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+
+    .btn {
+        padding: 14px;
+        font-size: 16px;
+        touch-action: manipulation; /* Improves touch responsiveness */
+    }
+
+    .demo-credentials {
+        margin-top: 15px;
+        padding: 12px;
+    }
+
+    .demo-credentials p {
+        font-size: 11px;
+        padding: 8px;
+        margin-bottom: 8px;
+    }
+
+    /* Dashboard mobile styles */
+    .dashboard {
+        min-height: 100vh;
+    }
+
+    .navbar {
+        padding: 12px 15px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .navbar h1 {
+        font-size: 16px;
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .user-info {
+        gap: 8px;
+        font-size: 12px;
+        flex-wrap: wrap;
+    }
+
+    .user-role {
+        padding: 4px 8px;
+        font-size: 10px;
+    }
+
+    .logout-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .main-content {
+        padding: 15px 10px;
+    }
+
+    .nav-tabs {
+        flex-direction: row;
+        margin-bottom: 15px;
+        border-radius: 8px;
+    }
+
+    .nav-tab {
+        padding: 12px 8px;
+        font-size: 14px;
+        text-align: center;
+    }
+
+    .card {
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 8px;
+    }
+
+    .card h2 {
+        font-size: 16px;
+        margin-bottom: 15px;
+    }
+
+    /* Form rows stack on mobile */
+    .form-row {
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+
+    .form-group input,
+    .form-group select {
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 6px;
+    }
+
+    /* KPI grid mobile layout */
+    .kpi-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .kpi-card {
+        padding: 15px 10px;
+        border-radius: 8px;
+    }
+
+    .kpi-value {
+        font-size: 24px;
+        margin-bottom: 4px;
+    }
+
+    .kpi-label {
+        font-size: 12px;
+    }
+
+    /* Table mobile optimization */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .table {
+        min-width: 800px; /* Ensure table doesn't get too cramped */
+        font-size: 13px;
+    }
+
+    .table th,
+    .table td {
+        padding: 8px 6px;
+        white-space: nowrap;
+    }
+
+    .table th {
+        font-size: 12px;
+        background: #f1f3f4;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .btn-sm {
+        padding: 4px 8px;
+        font-size: 11px;
+        margin: 1px;
+        border-radius: 4px;
+    }
+
+    /* Chart containers mobile */
+    .chart-container {
+        height: 250px;
+        margin: 15px 0;
+    }
+
+    /* Two-column chart layout becomes single column on mobile */
+    .card + .card {
+        margin-top: 15px;
+    }
+
+    /* Search and filter mobile layout */
+    .booking-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .booking-header h2 {
+        text-align: center;
+        margin-bottom: 0;
+    }
+
+    .search-filters {
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .search-filters .form-group {
+        min-width: auto;
+    }
+
+    #search-input,
+    #status-filter {
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 6px;
+    }
+
+    /* Add booking button mobile */
+    #add-booking-btn {
+        width: 100%;
+        padding: 12px;
+        font-size: 14px;
+    }
+
+    /* Status badges mobile */
+    .status-badge {
+        padding: 3px 6px;
+        font-size: 10px;
+        border-radius: 10px;
+    }
+
+    /* Loading states mobile */
+    .loading-spinner {
+        width: 30px;
+        height: 30px;
+        border-width: 3px;
+    }
+
+    /* Error and success messages mobile */
+    .error-message,
+    .success-message {
+        padding: 8px;
+        font-size: 13px;
+        border-radius: 6px;
+        margin-bottom: 10px;
+    }
+}
+
+/* Small mobile devices (320px - 480px) */
+@media (max-width: 480px) {
+    .navbar {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+        padding: 10px;
+    }
+
+    .navbar h1 {
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .user-info {
+        justify-content: center;
+        margin-top: 5px;
+    }
+
     .nav-tabs {
         flex-direction: column;
     }
-    
-    .main-content {
-        padding: 15px;
+
+    .nav-tab {
+        padding: 10px;
+        border-radius: 0;
+        border-bottom: 1px solid #e1e1e1;
     }
-    
+
+    .nav-tab:first-child {
+        border-radius: 8px 8px 0 0;
+    }
+
+    .nav-tab:last-child {
+        border-radius: 0 0 8px 8px;
+        border-bottom: none;
+    }
+
     .kpi-grid {
         grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .kpi-card {
+        padding: 12px;
+    }
+
+    .kpi-value {
+        font-size: 20px;
+    }
+
+    .main-content {
+        padding: 10px 8px;
+    }
+
+    .card {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+
+    .table {
+        font-size: 12px;
+        min-width: 700px;
+    }
+
+    .table th,
+    .table td {
+        padding: 6px 4px;
+    }
+
+    .btn-sm {
+        padding: 3px 6px;
+        font-size: 10px;
+    }
+
+    .chart-container {
+        height: 200px;
+    }
+}
+
+/* Tablet styles (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .main-content {
+        padding: 25px 20px;
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+
+    .form-row {
+        flex-direction: row;
+        gap: 15px;
+    }
+
+    .chart-container {
+        height: 350px;
+    }
+
+    .table th,
+    .table td {
+        padding: 10px 8px;
+    }
+}
+
+/* Large screens (1025px and up) - existing desktop styles apply */
+@media (min-width: 1025px) {
+    /* Two-column chart layout for analytics */
+    #analytics-tab > div:last-child {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
     }
 }
 
@@ -396,6 +883,9 @@ body {
     max-width: 800px;
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
     animation: modalSlideIn 0.3s ease-out;
+    max-height: 95vh;
+    display: flex;
+    flex-direction: column;
 }
 
 @keyframes modalSlideIn {
@@ -417,6 +907,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .modal-header h2 {
@@ -446,8 +937,8 @@ body {
 
 .modal-body {
     padding: 30px;
-    max-height: 70vh;
     overflow-y: auto;
+    flex: 1;
 }
 
 .form-actions {
@@ -457,6 +948,7 @@ body {
     margin-top: 30px;
     padding-top: 20px;
     border-top: 1px solid #e1e1e1;
+    flex-shrink: 0;
 }
 
 .btn-secondary {
@@ -469,6 +961,133 @@ body {
 .btn-secondary:hover {
     background: #5a6268;
     transform: translateY(-1px);
+}
+
+/* Mobile Modal Styles */
+@media (max-width: 768px) {
+    .modal {
+        padding: 0;
+    }
+    
+    .modal-content {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        border-radius: 0;
+        max-height: 100vh;
+        animation: modalSlideUp 0.3s ease-out;
+    }
+    
+    @keyframes modalSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(100%);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .modal-header {
+        padding: 15px 20px;
+        border-radius: 0;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .modal-header h2 {
+        font-size: 18px;
+    }
+    
+    .modal-close {
+        font-size: 24px;
+        width: 28px;
+        height: 28px;
+    }
+    
+    .modal-body {
+        padding: 20px 15px;
+        padding-bottom: 100px; /* Space for fixed form actions */
+    }
+    
+    .form-actions {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        margin-top: 20px;
+        padding: 15px 20px;
+        border-top: 2px solid #e1e1e1;
+        flex-direction: column-reverse;
+        gap: 10px;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+        margin-bottom: 0;
+        padding: 12px;
+        font-size: 16px;
+    }
+    
+    /* Form improvements for mobile */
+    .modal-body .form-row {
+        flex-direction: column;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .modal-body .form-group {
+        margin-bottom: 0;
+    }
+    
+    .modal-body .form-group label {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+    
+    .modal-body .form-group input,
+    .modal-body .form-group select {
+        padding: 12px;
+        font-size: 16px;
+        border: 2px solid #e1e1e1;
+        border-radius: 6px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .modal-body .form-group input:focus,
+    .modal-body .form-group select:focus {
+        border-color: #667eea;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-header {
+        padding: 12px 15px;
+    }
+    
+    .modal-header h2 {
+        font-size: 16px;
+    }
+    
+    .modal-body {
+        padding: 15px 12px;
+        padding-bottom: 90px;
+    }
+    
+    .form-actions {
+        padding: 12px 15px;
+    }
+    
+    .form-actions .btn {
+        padding: 14px;
+        font-size: 16px;
+    }
 }
 
 /* Status Badge Styles */
@@ -588,23 +1207,3 @@ body {
     font-size: 14px;
 }
 
-/* Mobile Modal Styles */
-@media (max-width: 768px) {
-    .modal-content {
-        width: 95%;
-        margin: 5% auto;
-    }
-    
-    .modal-body {
-        padding: 20px;
-    }
-    
-    .form-actions {
-        flex-direction: column;
-    }
-    
-    .form-actions .btn {
-        width: 100%;
-        margin-bottom: 10px;
-    }
-}
