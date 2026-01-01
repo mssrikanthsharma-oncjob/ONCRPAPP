@@ -1,18 +1,15 @@
-"""Vercel serverless function entry point."""
+from flask import Flask
 import os
 import sys
 
-# Add the parent directory to the Python path so we can import our app
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add parent directory to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app import create_app
 
-# Create the Flask application for production
+# Create Flask app
 app = create_app('production')
 
-# This is the WSGI application that Vercel will call
-def application(environ, start_response):
-    return app(environ, start_response)
-
-# For compatibility, also export as 'app'
-handler = app
+# Vercel expects this
+def handler(request):
+    return app
