@@ -510,6 +510,10 @@
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     
     <script>
+        // Clear any cached authentication data for fresh start
+        localStorage.removeItem('jwt_token');
+        localStorage.removeItem('user');
+        
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             window.bookingApp = new BookingApp();

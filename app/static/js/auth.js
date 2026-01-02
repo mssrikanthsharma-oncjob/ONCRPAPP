@@ -3,6 +3,13 @@
 class AuthService {
     constructor() {
         this.baseURL = '/api';
+        // Don't load cached data initially - let the app decide
+        this.token = null;
+        this.user = null;
+    }
+
+    // Load cached authentication data
+    loadCachedAuth() {
         this.token = localStorage.getItem('jwt_token');
         this.user = JSON.parse(localStorage.getItem('user') || 'null');
     }

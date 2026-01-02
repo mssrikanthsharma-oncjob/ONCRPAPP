@@ -14,9 +14,12 @@ class BookingApp {
 
     async init() {
         try {
+            // Load cached authentication data
+            authService.loadCachedAuth();
+            
             // Clear any invalid cached tokens first
-            if (this.token && !this.user) {
-                this.clearAuth();
+            if (authService.token && !authService.user) {
+                authService.clearAuth();
             }
             
             // Check authentication on page load
