@@ -14,6 +14,11 @@ class BookingApp {
 
     async init() {
         try {
+            // Clear any invalid cached tokens first
+            if (this.token && !this.user) {
+                this.clearAuth();
+            }
+            
             // Check authentication on page load
             const isAuth = await authService.isAuthenticated();
             if (isAuth) {
@@ -24,11 +29,13 @@ class BookingApp {
                     this.showDashboard();
                 }
             } else {
+                // Ensure we show login by default
                 this.showLogin();
             }
         } catch (error) {
             console.error('Authentication check failed:', error);
-            // On error, show login
+            // On error, clear auth and show login
+            authService.clearAuth();
             this.showLogin();
         }
 
@@ -96,9 +103,24 @@ class BookingApp {
     }
 
     showLogin() {
-        document.getElementById('login-container').style.display = 'flex';
-        document.getElementById('dashboard').style.display = 'none';
-        document.getElementById('customer-portal').style.display = 'none';
+        // Ensure login container is visible and others are hidden
+        const loginContainer = document.getElementById('login-container');
+        const dashboard = document.getElementById('dashboard');
+        const customerPortal = document.getElementById('customer-portal');
+        
+        if (loginContainer) loginContainer.style.display = 'flex';
+        if (dashboard) dashboard.style.display = 'none';
+        if (customerPortal) customerPortal.style.display = 'none';
+        
+        // Clear any error messages
+        UIUtils.hideError();
+        UIUtils.hideSuccess();
+        
+        // Focus on username field
+        const usernameField = document.getElementById('username');
+        if (usernameField) {
+            setTimeout(() => usernameField.focus(), 100);
+        }
     }
 
     showDashboard() {
