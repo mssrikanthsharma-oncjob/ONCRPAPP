@@ -19,15 +19,16 @@
 </head>
 </head>
 <body>
-    <!-- Login Container -->
-    <div id="login-container" class="container">
-        <div class="header">
-            <div class="logo-container">
-                <img src="{{ url_for('static', filename='logo.jpg') }}" alt="ONC Realty Partners Logo" class="login-logo">
+    <div id="app-container">
+        <!-- Login Container -->
+        <div id="login-container" class="container">
+            <div class="header">
+                <div class="logo-container">
+                    <img src="{{ url_for('static', filename='logo.jpg') }}" alt="ONC Realty Partners Logo" class="login-logo">
+                </div>
+                <h1>ONC REALTY PARTNERS</h1>
+                <p>Booking Management System</p>
             </div>
-            <h1>ONC REALTY PARTNERS</h1>
-            <p>Booking Management System</p>
-        </div>
         
         <div class="form-container">
             <div id="error-message" class="error-message"></div>
@@ -51,6 +52,11 @@
                 <h3>Demo Credentials</h3>
                 <p><strong>Admin:</strong> username: admin, password: admin123</p>
                 <p><strong>Sales:</strong> username: sales, password: sales123</p>
+            </div>
+            
+            <!-- Footer inside login -->
+            <div class="footer-inline">
+                <p>&copy; 2026 ONC REALTY PARTNERS. All rights reserved.</p>
             </div>
         </div>
     </div>
@@ -193,8 +199,14 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Footer inside dashboard -->
+            <div class="footer-inline">
+                <p>&copy; 2026 ONC REALTY PARTNERS. All rights reserved.</p>
+            </div>
         </div>
     </div>
+</div>
 
     <!-- Booking Form Modal (will be implemented in subtask 6.2) -->
     <div id="booking-modal" class="modal" style="display: none;">
