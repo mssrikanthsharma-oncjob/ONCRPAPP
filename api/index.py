@@ -203,25 +203,67 @@ def verify_token(token):
 def index():
     """Serve the main application."""
     try:
-        # Check if template exists
-        template_path = os.path.join(template_dir, 'index.html')
-        if not os.path.exists(template_path):
-            return jsonify({
-                'error': f'Template not found at {template_path}',
-                'template_dir': template_dir,
-                'current_dir': current_dir,
-                'files': os.listdir(template_dir) if os.path.exists(template_dir) else 'Template dir not found'
-            }), 500
-            
         return render_template('index.html')
     except Exception as e:
-        return jsonify({
-            'error': f'Template error: {str(e)}',
-            'message': 'ONC REALTY PARTNERS - Property Advisory Platform',
-            'status': 'template_error',
-            'template_dir': template_dir,
-            'static_dir': static_dir
-        }), 500
+        # Fallback to inline HTML if template fails
+        return f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ONC REALTY PARTNERS - Property Advisory</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div id="app-container">
+        <div id="login-container" class="container" style="display: flex;">
+            <div class="header">
+                <h1>ONC REALTY PARTNERS</h1>
+                <p>Property Search & Advisory Platform</p>
+            </div>
+            <div class="form-container">
+                <div id="error-message" class="error-message"></div>
+                <div id="success-message" class="success-message"></div>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" required placeholder="Enter your username">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required placeholder="Enter your password">
+                    </div>
+                    <button type="submit" id="login-btn" class="btn btn-primary">Login</button>
+                </form>
+                <div class="demo-credentials">
+                    <h3>Demo Credentials</h3>
+                    <p><strong>Admin:</strong> username: admin, password: admin123</p>
+                    <p><strong>Sales:</strong> username: sales, password: sales123</p>
+                    <p><strong>Customer:</strong> username: customer, password: customer123</p>
+                </div>
+            </div>
+        </div>
+        <div id="dashboard" class="dashboard" style="display: none;"></div>
+        <div id="customer-portal" class="dashboard" style="display: none;"></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/bookings.js"></script>
+    <script src="/static/js/analytics.js"></script>
+    <script src="/static/js/customer.js"></script>
+    <script src="/static/js/admin.js"></script>
+    <script src="/static/js/app.js"></script>
+    <script>
+        localStorage.removeItem('jwt_token');
+        localStorage.removeItem('user');
+        document.addEventListener('DOMContentLoaded', function() {{
+            window.bookingApp = new BookingApp();
+        }});
+    </script>
+</body>
+</html>
+        """
 
 @app.route('/api/health')
 def health():
