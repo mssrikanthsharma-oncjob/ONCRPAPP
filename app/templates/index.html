@@ -508,5 +508,12 @@
     <script src="{{ url_for('static', filename='js/customer.js') }}"></script>
     <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    
+    <script>
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            window.bookingApp = new BookingApp();
+        });
+    </script>
 </body>
 </html>
