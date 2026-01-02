@@ -28,7 +28,7 @@ users_db = {
     'customer': {'password': 'customer123', 'role': 'customer'}
 }
 
-# Dummy booking records
+# Dummy booking records with future dates
 bookings_db = [
     {
         'id': 1,
@@ -42,7 +42,7 @@ bookings_db = [
         'refund': 0,
         'trust_fund': 50000,
         'status': 'active',
-        'timeline': '2024-03-15',
+        'timeline': '2025-03-15',
         'created_by': 'admin',
         'created_at': '2024-01-15T10:30:00'
     },
@@ -58,7 +58,7 @@ bookings_db = [
         'refund': 0,
         'trust_fund': 100000,
         'status': 'complete',
-        'timeline': '2024-02-20',
+        'timeline': '2025-02-20',
         'created_by': 'sales',
         'created_at': '2024-01-10T14:20:00'
     },
@@ -74,14 +74,105 @@ bookings_db = [
         'refund': 25000,
         'trust_fund': 30000,
         'status': 'active',
-        'timeline': '2024-04-10',
+        'timeline': '2025-04-10',
         'created_by': 'admin',
         'created_at': '2024-01-20T09:15:00'
+    },
+    {
+        'id': 4,
+        'customer_name': 'Sunita Reddy',
+        'project': 'Skyline Heights',
+        'contact': '+91 9876543213',
+        'type': '4BHK',
+        'agreement_cost': 3500000,
+        'amount': 3500000,
+        'tax': 350000,
+        'refund': 0,
+        'trust_fund': 150000,
+        'status': 'active',
+        'timeline': '2025-05-25',
+        'created_by': 'sales',
+        'created_at': '2024-01-25T11:45:00'
+    },
+    {
+        'id': 5,
+        'customer_name': 'Vikram Singh',
+        'project': 'Royal Gardens',
+        'contact': '+91 9876543214',
+        'type': '2BHK',
+        'agreement_cost': 1500000,
+        'amount': 1500000,
+        'tax': 150000,
+        'refund': 0,
+        'trust_fund': 75000,
+        'status': 'active',
+        'timeline': '2025-06-30',
+        'created_by': 'admin',
+        'created_at': '2024-02-01T16:20:00'
+    },
+    {
+        'id': 6,
+        'customer_name': 'Meera Joshi',
+        'project': 'Paradise Villas',
+        'contact': '+91 9876543215',
+        'type': '3BHK',
+        'agreement_cost': 2200000,
+        'amount': 2200000,
+        'tax': 220000,
+        'refund': 50000,
+        'trust_fund': 90000,
+        'status': 'cancelled',
+        'timeline': '2025-07-15',
+        'created_by': 'sales',
+        'created_at': '2024-02-05T09:30:00'
+    },
+    {
+        'id': 7,
+        'customer_name': 'Arjun Kapoor',
+        'project': 'Metro Heights',
+        'contact': '+91 9876543216',
+        'type': '1BHK',
+        'agreement_cost': 950000,
+        'amount': 950000,
+        'tax': 95000,
+        'refund': 0,
+        'trust_fund': 40000,
+        'status': 'complete',
+        'timeline': '2025-08-20',
+        'created_by': 'admin',
+        'created_at': '2024-02-10T14:15:00'
+    },
+    {
+        'id': 8,
+        'customer_name': 'Kavya Nair',
+        'project': 'Coastal Towers',
+        'contact': '+91 9876543217',
+        'type': '2BHK',
+        'agreement_cost': 1800000,
+        'amount': 1800000,
+        'tax': 180000,
+        'refund': 0,
+        'trust_fund': 80000,
+        'status': 'active',
+        'timeline': '2025-09-10',
+        'created_by': 'sales',
+        'created_at': '2024-02-15T12:00:00'
     }
 ]
 
 enquiries_db = []
 llm_config = {'model': 'gpt-3.5-turbo', 'api_key': ''}
+
+# Available LLM models
+available_models = [
+    'gpt-4',
+    'gpt-4-turbo',
+    'gpt-3.5-turbo',
+    'gpt-3.5-turbo-16k',
+    'claude-3-opus',
+    'claude-3-sonnet',
+    'claude-3-haiku'
+]
 
 def generate_token(username, role):
     """Generate JWT token."""
@@ -591,7 +682,8 @@ def llm_config_endpoint():
         if request.method == 'GET':
             return jsonify({
                 'success': True,
-                'config': llm_config
+                'config': llm_config,
+                'available_models': available_models
             })
         else:
             data = request.get_json()
