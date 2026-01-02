@@ -95,7 +95,6 @@ class BookingApp {
     updateUserInfo() {
         const user = authService.getCurrentUser();
         if (user) {
-            document.getElementById('user-name').textContent = user.username;
             document.getElementById('user-role').textContent = user.role.replace('_', ' ').toUpperCase();
         }
     }

@@ -22,6 +22,9 @@
     <!-- Login Container -->
     <div id="login-container" class="container">
         <div class="header">
+            <div class="logo-container">
+                <img src="{{ url_for('static', filename='logo.jpg') }}" alt="ONC Realty Partners Logo" class="login-logo">
+            </div>
             <h1>ONC REALTY PARTNERS</h1>
             <p>Booking Management System</p>
         </div>
@@ -55,9 +58,11 @@
     <!-- Dashboard Container -->
     <div id="dashboard" class="dashboard">
         <nav class="navbar">
-            <h1>ONC REALTY PARTNERS</h1>
+            <div class="navbar-brand">
+                <img src="{{ url_for('static', filename='logo.jpg') }}" alt="ONC Realty Partners Logo" class="navbar-logo">
+                <h1>ONC REALTY PARTNERS</h1>
+            </div>
             <div class="user-info">
-                <span id="user-name">User</span>
                 <span id="user-role" class="user-role">ROLE</span>
                 <button id="logout-btn" class="logout-btn">Logout</button>
             </div>
@@ -152,17 +157,20 @@
                             <button id="apply-filter-btn" class="btn btn-primary">Apply Filter</button>
                         </div>
                         <div class="form-group">
+                            <label for="export-format">Export Format</label>
+                            <select id="export-format">
+                                <option value="csv">CSV</option>
+                                <option value="json">JSON</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label>&nbsp;</label>
                             <button id="export-btn" class="btn btn-demo">Export Data</button>
                         </div>
                     </div>
-                    
-                    <div class="chart-container">
-                        <canvas id="trends-chart"></canvas>
-                    </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
                     <div class="card">
                         <h2>Project Distribution</h2>
                         <div class="chart-container" style="height: 300px;">
@@ -174,6 +182,13 @@
                         <h2>Revenue by Type</h2>
                         <div class="chart-container" style="height: 300px;">
                             <canvas id="revenue-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h2>Status Distribution</h2>
+                        <div class="chart-container" style="height: 300px;">
+                            <canvas id="status-chart"></canvas>
                         </div>
                     </div>
                 </div>

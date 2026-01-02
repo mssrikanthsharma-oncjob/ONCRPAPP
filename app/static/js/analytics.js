@@ -152,102 +152,14 @@ class AnalyticsManager {
     }
 
     updateCharts(chartsData) {
-        // Update trends chart
-        this.updateTrendsChart(chartsData.monthly_trends);
-        
         // Update project distribution chart
         this.updateProjectChart(chartsData.project_distribution);
         
         // Update revenue by type chart
         this.updateRevenueChart(chartsData.property_types);
-    }
-
-    updateTrendsChart(trendsData) {
-        const ctx = document.getElementById('trends-chart');
-        if (!ctx) return;
-
-        // Destroy existing chart if it exists
-        if (this.charts.trends) {
-            this.charts.trends.destroy();
-        }
-
-        // Prepare data from Chart.js format
-        const labels = trendsData.labels || [];
-        const datasets = trendsData.datasets || [];
         
-        // Find booking and revenue datasets
-        const bookingDataset = datasets.find(d => d.label === 'Bookings');
-        const revenueDataset = datasets.find(d => d.label === 'Revenue');
-
-        this.charts.trends = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Bookings',
-                    data: bookingDataset ? bookingDataset.data : [],
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    tension: 0.4,
-                    yAxisID: 'y'
-                }, {
-                    label: 'Revenue (₹)',
-                    data: revenueDataset ? revenueDataset.data : [],
-                    borderColor: '#764ba2',
-                    backgroundColor: 'rgba(118, 75, 162, 0.1)',
-                    tension: 0.4,
-                    yAxisID: 'y1'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
-                },
-                scales: {
-                    x: {
-                        display: true,
-                        title: {
-                            display: true,
-                            text: 'Time Period'
-                        }
-                    },
-                    y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        title: {
-                            display: true,
-                            text: 'Number of Bookings'
-                        }
-                    },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        title: {
-                            display: true,
-                            text: 'Revenue (₹)'
-                        },
-                        grid: {
-                            drawOnChartArea: false,
-                        },
-                    }
-                },
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Booking Trends Over Time'
-                    },
-                    legend: {
-                        display: true,
-                        position: 'top'
-                    }
-                }
-            }
-        });
+        // Update status distribution chart
+        this.updateStatusChart(chartsData.status_distribution);
     }
 
     updateProjectChart(projectData) {
@@ -354,6 +266,52 @@ class AnalyticsManager {
         });
     }
 
+    updateStatusChart(statusData) {
+        const ctx = document.getElementById('status-chart');
+        if (!ctx) return;
+
+        // Destroy existing chart if it exists
+        if (this.charts.status) {
+            this.charts.status.destroy();
+        }
+
+        // Prepare data from Chart.js format
+        const labels = statusData.labels || [];
+        const datasets = statusData.datasets || [];
+        const dataset = datasets[0] || { data: [], backgroundColor: [] };
+
+        this.charts.status = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: dataset.data,
+                    backgroundColor: dataset.backgroundColor || [
+                        'rgba(40, 167, 69, 0.8)',   // Green for Active
+                        'rgba(0, 123, 255, 0.8)',   // Blue for Complete
+                        'rgba(220, 53, 69, 0.8)'    // Red for Cancelled
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Bookings by Status'
+                    },
+                    legend: {
+                        display: true,
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
     generateColors(count) {
         const baseColors = [
             'rgba(102, 126, 234, 0.8)',
@@ -394,9 +352,12 @@ class AnalyticsManager {
         try {
             UIUtils.setLoading('export-btn', true);
             
+            // Get selected export format
+            const exportFormat = document.getElementById('export-format')?.value || 'csv';
+            
             const params = new URLSearchParams();
             params.append('type', 'kpis');
-            params.append('format', 'json');
+            params.append('format', exportFormat);
             
             // Add date range
             if (this.dateRange.start_date) {
@@ -426,10 +387,16 @@ class AnalyticsManager {
 
             const data = await response.json();
             
-            // Create and download file
-            this.downloadJSON(data, 'analytics_export');
+            // Export based on format
+            if (exportFormat === 'csv' && data.csv_data && data.csv_headers) {
+                // Create and download CSV file
+                this.downloadCSV(data.csv_data, data.csv_headers, 'analytics_kpis');
+            } else {
+                // Fallback to JSON export
+                this.downloadJSON(data, 'analytics_export');
+            }
             
-            UIUtils.showSuccess('Data exported successfully');
+            UIUtils.showSuccess(`Data exported successfully as ${exportFormat.toUpperCase()}`);
             
         } catch (error) {
             console.error('Error exporting data:', error);
@@ -437,6 +404,48 @@ class AnalyticsManager {
         } finally {
             UIUtils.setLoading('export-btn', false);
         }
+    }
+
+    downloadCSV(data, headers, filename) {
+        // Convert data to CSV format
+        const csvContent = this.convertToCSV(data, headers);
+        
+        // Create blob and download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        URL.revokeObjectURL(url);
+    }
+
+    convertToCSV(data, headers) {
+        if (!data || data.length === 0) {
+            return '';
+        }
+
+        // Create CSV header
+        let csv = headers.join(',') + '\n';
+        
+        // Add data rows
+        data.forEach(row => {
+            const values = headers.map(header => {
+                const value = row[header] || '';
+                // Escape commas and quotes in values
+                if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+                    return `"${value.replace(/"/g, '""')}"`;
+                }
+                return value;
+            });
+            csv += values.join(',') + '\n';
+        });
+        
+        return csv;
     }
 
     downloadJSON(data, filename) {

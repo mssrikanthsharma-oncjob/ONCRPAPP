@@ -51,6 +51,20 @@ body {
     text-align: center;
 }
 
+.logo-container {
+    margin-bottom: 15px;
+}
+
+.login-logo {
+    max-width: 80px;
+    max-height: 80px;
+    width: auto;
+    height: auto;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
 .header h1 {
     font-size: 22px;
     margin-bottom: 8px;
@@ -70,6 +84,15 @@ body {
 @media (min-width: 769px) {
     .header {
         padding: 30px 20px;
+    }
+    
+    .logo-container {
+        margin-bottom: 20px;
+    }
+    
+    .login-logo {
+        max-width: 100px;
+        max-height: 100px;
     }
     
     .header h1 {
@@ -259,10 +282,26 @@ body {
     z-index: 100;
 }
 
-.navbar h1 {
-    font-size: 18px;
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     flex: 1;
     min-width: 200px;
+}
+
+.navbar-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    object-fit: cover;
+}
+
+.navbar h1 {
+    font-size: 18px;
+    margin: 0;
 }
 
 .user-info {
@@ -306,6 +345,15 @@ body {
         padding: 15px 30px;
         flex-wrap: nowrap;
         gap: 15px;
+    }
+    
+    .navbar-brand {
+        gap: 15px;
+    }
+    
+    .navbar-logo {
+        width: 45px;
+        height: 45px;
     }
     
     .navbar h1 {
@@ -874,12 +922,25 @@ body {
     margin-bottom: 20px;
 }
 
-/* Desktop analytics - two column layout */
-@media (min-width: 1025px) {
+/* Desktop analytics - three column layout */
+@media (min-width: 1200px) {
+    #analytics-tab > div:last-child {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 20px;
+    }
+}
+
+/* Tablet analytics - two column layout */
+@media (min-width: 769px) and (max-width: 1199px) {
     #analytics-tab > div:last-child {
         display: grid !important;
         grid-template-columns: 1fr 1fr;
         gap: 20px;
+    }
+    
+    #analytics-tab > div:last-child > .card:last-child {
+        grid-column: 1 / -1;
     }
 }
 
@@ -891,6 +952,18 @@ body {
         text-align: center;
         padding: 12px 15px;
         gap: 8px;
+    }
+    
+    .navbar-brand {
+        justify-content: center;
+        margin-bottom: 8px;
+        min-width: auto;
+        flex: none;
+    }
+    
+    .navbar-logo {
+        width: 35px;
+        height: 35px;
     }
 
     .navbar h1 {
@@ -1376,3 +1449,23 @@ body {
     font-size: 14px;
 }
 
+
+/* Mobile-specific chart stacking */
+@media (max-width: 768px) {
+    /* Force charts to stack vertically on mobile */
+    #analytics-tab > div:last-child {
+        display: block !important;
+        grid-template-columns: none !important;
+    }
+    
+    #analytics-tab > div:last-child > .card {
+        margin-bottom: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Ensure charts stack on small mobile */
+    #analytics-tab > div:last-child > .card {
+        margin-bottom: 15px;
+    }
+}

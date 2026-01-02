@@ -207,6 +207,68 @@ class AnalyticsService:
         return distribution
     
     @staticmethod
+    def get_status_distribution(start_date: Optional[datetime] = None,
+                              end_date: Optional[datetime] = None,
+                              filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+        """
+        Get booking distribution by status.
+        
+        Args:
+            start_date: Filter bookings from this date
+            end_date: Filter bookings until this date
+            filters: Additional filters
+            
+        Returns:
+            List of status distribution data
+        """
+        # Build query
+        query = Booking.query
+        
+        # Apply date filters
+        if start_date:
+            query = query.filter(Booking.created_at >= start_date)
+        if end_date:
+            query = query.filter(Booking.created_at <= end_date)
+        
+        # Apply additional filters (excluding status filter to show all statuses)
+        if filters:
+            status_filters = {k: v for k, v in filters.items() if k != 'status'}
+            query = AnalyticsService._apply_filters(query, status_filters)
+        
+        # Group by status
+        status_data = db.session.query(
+            Booking.status,
+            func.count(Booking.id).label('booking_count'),
+            func.sum(Booking.amount).label('total_revenue'),
+            func.avg(Booking.amount).label('avg_revenue')
+        ).filter(
+            Booking.id.in_(query.with_entities(Booking.id))
+        ).group_by(
+            Booking.status
+        ).order_by(
+            func.count(Booking.id).desc()
+        ).all()
+        
+        # Format results
+        distribution = []
+        status_labels = {
+            'active': 'Active',
+            'complete': 'Complete', 
+            'cancelled': 'Cancelled'
+        }
+        
+        for data in status_data:
+            distribution.append({
+                'status': data.status,
+                'status_label': status_labels.get(data.status, data.status.title()),
+                'booking_count': data.booking_count,
+                'total_revenue': float(data.total_revenue or 0),
+                'avg_revenue': float(data.avg_revenue or 0)
+            })
+        
+        return distribution
+    
+    @staticmethod
     def get_property_type_analysis(start_date: Optional[datetime] = None,
                                  end_date: Optional[datetime] = None,
                                  filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
@@ -416,6 +478,24 @@ class AnalyticsService:
                     {
                         'label': 'Revenue by Type',
                         'data': [item['total_revenue'] for item in data],
+                        'type': 'bar'
+                    }
+                ]
+            }
+        
+        elif chart_type == 'status_distribution':
+            data = AnalyticsService.get_status_distribution(start_date, end_date, filters)
+            return {
+                'labels': [item['status_label'] for item in data],
+                'datasets': [
+                    {
+                        'label': 'Bookings by Status',
+                        'data': [item['booking_count'] for item in data],
+                        'backgroundColor': [
+                            'rgba(40, 167, 69, 0.8)',   # Green for Active
+                            'rgba(0, 123, 255, 0.8)',   # Blue for Complete
+                            'rgba(220, 53, 69, 0.8)'    # Red for Cancelled
+                        ],
                         'type': 'doughnut'
                     }
                 ]
@@ -497,7 +577,7 @@ class AnalyticsService:
             start_date: Start date for data
             end_date: End date for data
             filters: Additional filters
-            format_type: Export format ('json', 'csv_data')
+            format_type: Export format ('json', 'csv')
             
         Returns:
             Exported data in requested format
@@ -526,15 +606,90 @@ class AnalyticsService:
             'data': data
         }
         
-        if format_type == 'csv_data':
-            # Convert to CSV-friendly format
-            if isinstance(data, dict):
-                # For KPI data, convert to list of key-value pairs
-                csv_data = [{'metric': k, 'value': v} for k, v in data.items()]
-            else:
-                # For list data, use as-is
-                csv_data = data
-            
+        if format_type == 'csv':
+            # Convert to CSV format
+            csv_data = AnalyticsService._convert_to_csv_format(data_type, data)
             export_data['csv_data'] = csv_data
+            export_data['csv_headers'] = AnalyticsService._get_csv_headers(data_type)
         
         return export_data
+    
+    @staticmethod
+    def _convert_to_csv_format(data_type: str, data: Any) -> List[Dict[str, Any]]:
+        """Convert analytics data to CSV-friendly format."""
+        if data_type == 'kpis':
+            # Convert KPI dictionary to list of records
+            return [
+                {'Metric': 'Total Bookings', 'Value': data.get('total_bookings', 0)},
+                {'Metric': 'Total Revenue', 'Value': f"₹{data.get('total_revenue', 0):,.2f}"},
+                {'Metric': 'Active Bookings', 'Value': data.get('active_bookings', 0)},
+                {'Metric': 'Completed Bookings', 'Value': data.get('completed_bookings', 0)},
+                {'Metric': 'Cancelled Bookings', 'Value': data.get('cancelled_bookings', 0)},
+                {'Metric': 'Completion Rate', 'Value': f"{data.get('completion_rate', 0):.1f}%"},
+                {'Metric': 'Average Booking Value', 'Value': f"₹{data.get('average_booking_value', 0):,.2f}"},
+                {'Metric': 'Total Agreement Cost', 'Value': f"₹{data.get('total_agreement_cost', 0):,.2f}"},
+                {'Metric': 'Total Tax Amount', 'Value': f"₹{data.get('total_tax_amount', 0):,.2f}"},
+            ]
+        
+        elif data_type == 'projects':
+            # Convert project distribution to CSV format
+            csv_data = []
+            for project in data:
+                csv_data.append({
+                    'Project Name': project.get('project_name', ''),
+                    'Total Bookings': project.get('booking_count', 0),
+                    'Total Revenue': f"₹{project.get('total_revenue', 0):,.2f}",
+                    'Active Bookings': project.get('active_count', 0),
+                    'Completed Bookings': project.get('completed_count', 0),
+                    'Cancelled Bookings': project.get('cancelled_count', 0),
+                    'Average Booking Value': f"₹{project.get('avg_booking_value', 0):,.2f}",
+                })
+            return csv_data
+        
+        elif data_type == 'types':
+            # Convert property type analysis to CSV format
+            csv_data = []
+            for prop_type in data:
+                csv_data.append({
+                    'Property Type': prop_type.get('property_type', ''),
+                    'Total Bookings': prop_type.get('booking_count', 0),
+                    'Total Revenue': f"₹{prop_type.get('total_revenue', 0):,.2f}",
+                    'Active Bookings': prop_type.get('active_count', 0),
+                    'Completed Bookings': prop_type.get('completed_count', 0),
+                    'Cancelled Bookings': prop_type.get('cancelled_count', 0),
+                    'Average Booking Value': f"₹{prop_type.get('avg_booking_value', 0):,.2f}",
+                    'Average Area': f"{prop_type.get('avg_area', 0):.0f} sq ft",
+                })
+            return csv_data
+        
+        elif data_type == 'trends':
+            # Convert monthly trends to CSV format
+            csv_data = []
+            for trend in data:
+                csv_data.append({
+                    'Period': trend.get('period', ''),
+                    'Total Bookings': trend.get('booking_count', 0),
+                    'Total Revenue': f"₹{trend.get('total_revenue', 0):,.2f}",
+                    'Active Bookings': trend.get('active_count', 0),
+                    'Completed Bookings': trend.get('completed_count', 0),
+                    'Cancelled Bookings': trend.get('cancelled_count', 0),
+                })
+            return csv_data
+        
+        return []
+    
+    @staticmethod
+    def _get_csv_headers(data_type: str) -> List[str]:
+        """Get CSV headers for different data types."""
+        if data_type == 'kpis':
+            return ['Metric', 'Value']
+        elif data_type == 'projects':
+            return ['Project Name', 'Total Bookings', 'Total Revenue', 'Active Bookings', 
+                   'Completed Bookings', 'Cancelled Bookings', 'Average Booking Value']
+        elif data_type == 'types':
+            return ['Property Type', 'Total Bookings', 'Total Revenue', 'Active Bookings',
+                   'Completed Bookings', 'Cancelled Bookings', 'Average Booking Value', 'Average Area']
+        elif data_type == 'trends':
+            return ['Period', 'Total Bookings', 'Total Revenue', 'Active Bookings',
+                   'Completed Bookings', 'Cancelled Bookings']
+        return []

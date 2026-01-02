@@ -37,6 +37,10 @@ def get_dashboard_data():
             'property_types', start_dt, end_dt, filters
         )
         
+        status_distribution = AnalyticsService.get_chart_data(
+            'status_distribution', start_dt, end_dt, filters
+        )
+        
         revenue_trends = AnalyticsService.get_chart_data(
             'revenue_trends', start_dt, end_dt, filters
         )
@@ -47,6 +51,7 @@ def get_dashboard_data():
                 'monthly_trends': monthly_trends,
                 'project_distribution': project_distribution,
                 'property_types': property_types,
+                'status_distribution': status_distribution,
                 'revenue_trends': revenue_trends
             },
             'date_range': {
@@ -198,7 +203,7 @@ def get_chart_data(chart_type):
     """Get formatted data for specific chart types."""
     try:
         # Validate chart type
-        valid_chart_types = ['monthly_trends', 'project_distribution', 'property_types', 'revenue_trends']
+        valid_chart_types = ['monthly_trends', 'project_distribution', 'property_types', 'status_distribution', 'revenue_trends']
         if chart_type not in valid_chart_types:
             return jsonify({
                 'error': f'Invalid chart type. Must be one of: {", ".join(valid_chart_types)}'
@@ -250,7 +255,7 @@ def export_analytics_data():
                 'error': f'Invalid data type. Must be one of: {", ".join(valid_data_types)}'
             }), 400
         
-        valid_formats = ['json', 'csv_data']
+        valid_formats = ['json', 'csv']
         if format_type not in valid_formats:
             return jsonify({
                 'error': f'Invalid format. Must be one of: {", ".join(valid_formats)}'
@@ -265,10 +270,9 @@ def export_analytics_data():
         )
         
         # Set appropriate content type
-        if format_type == 'csv_data':
+        if format_type == 'csv':
             response = jsonify(export_data)
             response.headers['Content-Type'] = 'application/json'
-            response.headers['Content-Disposition'] = f'attachment; filename=analytics_{data_type}_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}.json'
         else:
             response = jsonify(export_data)
         
