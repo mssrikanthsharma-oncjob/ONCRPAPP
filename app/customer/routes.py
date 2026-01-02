@@ -5,13 +5,20 @@ import smtplib
 from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from flask import Blueprint, request, jsonify, current_app, send_file
-from io import BytesIO
+from flask import Blueprint, request, jsonify, current_app
 from app import db
 from app.models import User, CustomerEnquiry, LLMConfig
 from app.auth.auth_service import auth_required
 from app.customer.customer_service import CustomerService
-from app.customer.pdf_service import PDFReportService
+
+# Import PDF service with error handling
+try:
+    from flask import send_file
+    from io import BytesIO
+    from app.customer.pdf_service import PDFReportService
+    PDF_SERVICE_AVAILABLE = True
+except ImportError:
+    PDF_SERVICE_AVAILABLE = False
 
 customer_bp = Blueprint('customer', __name__)
 
@@ -217,6 +224,16 @@ def generate_pdf_report():
         
         if not user or not user.is_email_verified:
             return jsonify({'error': 'Email verification required'}), 400
+        
+        # Check if PDF service is available
+        if not PDF_SERVICE_AVAILABLE:
+            # Fallback to text report
+            text_report = CustomerService.generate_text_report(user_id, enquiry_ids, report_type)
+            return jsonify({
+                'error': 'PDF generation not available in this environment',
+                'text_report': text_report,
+                'fallback': True
+            }), 200
         
         # Generate PDF report
         pdf_data, error = PDFReportService.generate_customer_report(
