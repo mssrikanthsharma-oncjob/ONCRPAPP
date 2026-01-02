@@ -10,9 +10,15 @@ from flask_cors import CORS
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Get the correct paths for Vercel
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+template_dir = os.path.join(parent_dir, 'app', 'templates')
+static_dir = os.path.join(parent_dir, 'app', 'static')
+
 app = Flask(__name__, 
-           template_folder='../app/templates',
-           static_folder='../app/static')
+           template_folder=template_dir,
+           static_folder=static_dir)
 
 # Configuration matching localhost
 app.config['SECRET_KEY'] = 'dev-secret-key-2024'
@@ -197,13 +203,25 @@ def verify_token(token):
 def index():
     """Serve the main application."""
     try:
+        # Check if template exists
+        template_path = os.path.join(template_dir, 'index.html')
+        if not os.path.exists(template_path):
+            return jsonify({
+                'error': f'Template not found at {template_path}',
+                'template_dir': template_dir,
+                'current_dir': current_dir,
+                'files': os.listdir(template_dir) if os.path.exists(template_dir) else 'Template dir not found'
+            }), 500
+            
         return render_template('index.html')
     except Exception as e:
         return jsonify({
             'error': f'Template error: {str(e)}',
             'message': 'ONC REALTY PARTNERS - Property Advisory Platform',
-            'status': 'template_error'
-        })
+            'status': 'template_error',
+            'template_dir': template_dir,
+            'static_dir': static_dir
+        }), 500
 
 @app.route('/api/health')
 def health():
@@ -219,9 +237,9 @@ def health():
 def static_files(filename):
     """Serve static files."""
     try:
-        return send_from_directory('../app/static', filename)
+        return send_from_directory(static_dir, filename)
     except Exception as e:
-        return jsonify({'error': f'Static file error: {str(e)}'}), 404
+        return jsonify({'error': f'Static file error: {str(e)}', 'file': filename, 'static_dir': static_dir}), 404
 
 # Authentication endpoints (matching localhost exactly)
 @app.route('/api/auth/login', methods=['POST'])
@@ -687,12 +705,17 @@ def llm_config_endpoint():
             })
         else:
             data = request.get_json()
-            llm_config.update(data)
-            return jsonify({
-                'success': True,
-                'message': 'LLM configuration saved',
-                'config': llm_config
-            })
+            if data:
+                # Update global config
+                global llm_config
+                llm_config.update(data)
+                return jsonify({
+                    'success': True,
+                    'message': 'LLM configuration saved successfully',
+                    'config': llm_config
+                })
+            else:
+                return jsonify({'error': 'No data provided'}), 400
             
     except Exception as e:
         return jsonify({'error': f'LLM config failed: {str(e)}'}), 500
