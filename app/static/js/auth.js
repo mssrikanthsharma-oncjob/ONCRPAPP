@@ -60,8 +60,8 @@ class AuthService {
             const result = await response.json();
 
             if (response.ok) {
-                this.setAuth(result.data.token, result.data.user);
-                return { success: true, user: result.data.user };
+                this.setAuth(result.token, result.user);
+                return { success: true, user: result.user };
             } else {
                 return { success: false, error: result.error || 'Login failed' };
             }
