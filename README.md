@@ -1,10 +1,10 @@
-# ONC REALTY PARTNERS - Booking Management System
+# ONC REALTY PARTNERS - Enhanced Property Management Application
 
-A comprehensive web-based booking management system for real estate transactions with role-based authentication, analytics dashboard, and comprehensive reporting capabilities.
+A comprehensive web-based property management application for real estate transactions with role-based authentication, analytics dashboard, and comprehensive reporting capabilities. This is an enhanced version of the original booking management system.
 
 ## 🚀 Live Demo
 
-**GitHub Repository**: https://github.com/mssrikanthsharma-oncjob/ONCRP
+**GitHub Repository**: https://github.com/mssrikanthsharma-oncjob/ONCRPAPP
 
 ## 📋 Features
 
@@ -69,8 +69,8 @@ A comprehensive web-based booking management system for real estate transactions
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/mssrikanthsharma-oncjob/ONCRP.git
-   cd ONCRP
+   git clone https://github.com/mssrikanthsharma-oncjob/ONCRPAPP.git
+   cd ONCRPAPP
    ```
 
 2. **Set up Python environment**
@@ -169,7 +169,7 @@ python -m pytest tests/test_booking_frontend_integration.py -v
 ## 📁 Project Structure
 
 ```
-ONCRP/
+ONCRPAPP/
 ├── app/                          # Main application package
 │   ├── analytics/               # Analytics module
 │   ├── auth/                    # Authentication module
