@@ -12,9 +12,10 @@ class BookingApp {
         this.init();
     }
 
-    init() {
+    async init() {
         // Check authentication on page load
-        if (authService.isAuthenticated()) {
+        const isAuth = await authService.isAuthenticated();
+        if (isAuth) {
             const user = authService.getCurrentUser();
             if (user && user.role === 'customer') {
                 this.showCustomerPortal();

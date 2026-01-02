@@ -24,8 +24,34 @@ class AuthService {
     }
 
     // Check if user is authenticated
-    isAuthenticated() {
-        return !!this.token && !!this.user;
+    async isAuthenticated() {
+        if (!this.token || !this.user) {
+            return false;
+        }
+        
+        // Verify token with server
+        try {
+            const response = await fetch(`${this.baseURL}/auth/verify`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ token: this.token })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                return result.valid;
+            } else {
+                // Token is invalid, clear auth
+                this.clearAuth();
+                return false;
+            }
+        } catch (error) {
+            console.error('Token verification error:', error);
+            // On network error, assume token is valid for offline functionality
+            return true;
+        }
     }
 
     // Get current user
