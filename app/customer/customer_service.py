@@ -200,3 +200,79 @@ For detailed consultation, please schedule an appointment with our experts.
             
         except Exception as e:
             return f"Error generating report: {str(e)}"
+    @staticmethod
+    def generate_text_report(customer_id, enquiry_ids=None, report_type='comprehensive'):
+        """Generate text-based report as fallback when PDF is not available."""
+        try:
+            from app.models import CustomerEnquiry
+            import json
+            from datetime import datetime
+            
+            # Get customer enquiries
+            query = CustomerEnquiry.query.filter_by(customer_id=customer_id)
+            
+            if enquiry_ids:
+                query = query.filter(CustomerEnquiry.id.in_(enquiry_ids))
+            
+            if report_type == 'search-only':
+                query = query.filter_by(enquiry_type='search')
+            elif report_type == 'advice-only':
+                query = query.filter_by(enquiry_type='advice')
+            
+            enquiries = query.order_by(CustomerEnquiry.created_at.desc()).all()
+            
+            if not enquiries:
+                return "No enquiries found for report generation."
+            
+            # Generate text report
+            report = f"""
+ONC REALTY PARTNERS - PROPERTY SEARCH & ADVISORY REPORT
+Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+Customer ID: {customer_id}
+Report Type: {report_type.replace('-', ' ').title()}
+
+=== SUMMARY ===
+Total Enquiries: {len(enquiries)}
+Search Requests: {len([e for e in enquiries if e.enquiry_type == 'search'])}
+Advice Requests: {len([e for e in enquiries if e.enquiry_type == 'advice'])}
+
+=== DETAILED ENQUIRIES ===
+"""
+            
+            for i, enquiry in enumerate(enquiries, 1):
+                report += f"\n{i}. ENQUIRY #{enquiry.id} - {enquiry.enquiry_type.upper()}\n"
+                report += f"   Date: {enquiry.created_at.strftime('%Y-%m-%d %H:%M:%S')}\n"
+                
+                if enquiry.enquiry_type == 'search' and enquiry.search_criteria:
+                    try:
+                        criteria = json.loads(enquiry.search_criteria)
+                        report += f"   Location: {criteria.get('location', 'N/A')}\n"
+                        report += f"   Property Type: {criteria.get('property_type', 'Any')}\n"
+                        if criteria.get('budget_min'):
+                            report += f"   Budget: ₹{criteria['budget_min']:,} - ₹{criteria.get('budget_max', 0):,}\n"
+                    except:
+                        report += "   Search criteria not available\n"
+                
+                elif enquiry.enquiry_type == 'advice':
+                    if enquiry.advice_request:
+                        report += f"   Request: {enquiry.advice_request[:100]}...\n"
+                    if enquiry.llm_response:
+                        report += f"   Advice: {enquiry.llm_response[:200]}...\n"
+                
+                report += "\n"
+            
+            report += """
+=== RECOMMENDATIONS ===
+1. Continue researching properties in your preferred locations
+2. Consider consulting with our real estate experts
+3. Plan your finances including additional costs
+4. Ensure all legal verifications before purchase
+5. Stay informed about market trends
+
+Thank you for choosing ONC REALTY PARTNERS!
+"""
+            
+            return report
+            
+        except Exception as e:
+            return f"Error generating text report: {str(e)}"

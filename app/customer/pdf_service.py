@@ -2,12 +2,18 @@
 import json
 from datetime import datetime
 from io import BytesIO
-from reportlab.lib.pagesizes import letter, A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
+
+try:
+    from reportlab.lib.pagesizes import letter, A4
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    from reportlab.lib import colors
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
+    REPORTLAB_AVAILABLE = True
+except ImportError:
+    REPORTLAB_AVAILABLE = False
+
 from app.models import CustomerEnquiry
 
 
@@ -17,6 +23,9 @@ class PDFReportService:
     @staticmethod
     def generate_customer_report(customer_id, enquiry_ids=None, report_type='comprehensive'):
         """Generate PDF report for customer enquiries."""
+        if not REPORTLAB_AVAILABLE:
+            return None, "PDF generation not available in this environment. Please contact support."
+        
         try:
             # Get customer enquiries
             query = CustomerEnquiry.query.filter_by(customer_id=customer_id)

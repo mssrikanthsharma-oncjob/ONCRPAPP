@@ -226,7 +226,13 @@ def generate_pdf_report():
         )
         
         if error:
-            return jsonify({'error': error}), 500
+            # If PDF generation fails, return text report instead
+            text_report = CustomerService.generate_text_report(user_id, enquiry_ids, report_type)
+            return jsonify({
+                'error': error,
+                'text_report': text_report,
+                'fallback': True
+            }), 200
         
         if not pdf_data:
             return jsonify({'error': 'No data available for report generation'}), 400
@@ -246,7 +252,17 @@ def generate_pdf_report():
         )
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Fallback to text report
+        try:
+            user_id = request.current_user['user_id']
+            text_report = CustomerService.generate_text_report(user_id, [], 'comprehensive')
+            return jsonify({
+                'error': f'PDF generation failed: {str(e)}',
+                'text_report': text_report,
+                'fallback': True
+            }), 200
+        except:
+            return jsonify({'error': str(e)}), 500
 
 
 @customer_bp.route('/get-activity-summary', methods=['GET'])

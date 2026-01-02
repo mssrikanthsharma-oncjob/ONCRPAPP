@@ -351,8 +351,19 @@ class CustomerPortal {
                     </div>
                 `;
             } else {
-                const errorData = await response.json();
-                this.showError(errorData.error || 'Failed to generate report');
+                // Try to parse as JSON for fallback text report
+                try {
+                    const errorData = await response.json();
+                    if (errorData.fallback && errorData.text_report) {
+                        // Show text report as fallback
+                        this.showTextReport(errorData.text_report, reportType);
+                        this.showSuccess('Report generated as text (PDF not available in this environment)');
+                    } else {
+                        this.showError(errorData.error || 'Failed to generate report');
+                    }
+                } catch {
+                    this.showError('Failed to generate report');
+                }
             }
         } catch (error) {
             this.showError('Network error. Please try again.');
@@ -361,6 +372,44 @@ class CustomerPortal {
             button.disabled = false;
             button.textContent = 'Generate PDF Report';
         }
+    }
+
+    showTextReport(reportContent, reportType) {
+        // Show text report in a modal
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'block';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 800px;">
+                <div class="modal-header">
+                    <h3>Property Report - ${reportType.replace('-', ' ').toUpperCase()}</h3>
+                    <span class="close" onclick="this.parentElement.parentElement.parentElement.remove()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div style="margin-bottom: 15px;">
+                        <button onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent)" class="btn btn-primary">Copy Report</button>
+                        <button onclick="this.nextElementSibling.nextElementSibling.click()" class="btn btn-demo">Download as Text</button>
+                        <a href="data:text/plain;charset=utf-8,${encodeURIComponent(reportContent)}" download="ONC_Property_Report.txt" style="display: none;">Download</a>
+                    </div>
+                    <pre style="white-space: pre-wrap; font-family: 'Courier New', monospace; background: #f5f5f5; padding: 15px; border-radius: 4px; max-height: 400px; overflow-y: auto;">${reportContent}</pre>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="this.parentElement.parentElement.parentElement.remove()">Close</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        // Update report status
+        document.getElementById('report-status').style.display = 'block';
+        document.getElementById('report-status').innerHTML = `
+            <div class="success-message">
+                <h4>Text Report Generated!</h4>
+                <p>Your ${reportType.replace('-', ' ')} report has been generated as text.</p>
+                <p><strong>Note:</strong> PDF generation is not available in this environment.</p>
+                <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+            </div>
+        `;
     }
 
     downloadReport() {
