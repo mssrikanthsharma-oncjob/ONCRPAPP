@@ -28,6 +28,58 @@ users_db = {
     'customer': {'password': 'customer123', 'role': 'customer'}
 }
 
+# Dummy booking records
+bookings_db = [
+    {
+        'id': 1,
+        'customer_name': 'Rajesh Kumar',
+        'project': 'Sunrise Apartments',
+        'contact': '+91 9876543210',
+        'type': '2BHK',
+        'agreement_cost': 1200000,
+        'amount': 1200000,
+        'tax': 120000,
+        'refund': 0,
+        'trust_fund': 50000,
+        'status': 'active',
+        'timeline': '2024-03-15',
+        'created_by': 'admin',
+        'created_at': '2024-01-15T10:30:00'
+    },
+    {
+        'id': 2,
+        'customer_name': 'Priya Sharma',
+        'project': 'Green Valley Villas',
+        'contact': '+91 9876543211',
+        'type': '3BHK',
+        'agreement_cost': 2500000,
+        'amount': 2500000,
+        'tax': 250000,
+        'refund': 0,
+        'trust_fund': 100000,
+        'status': 'complete',
+        'timeline': '2024-02-20',
+        'created_by': 'sales',
+        'created_at': '2024-01-10T14:20:00'
+    },
+    {
+        'id': 3,
+        'customer_name': 'Amit Patel',
+        'project': 'Ocean View Towers',
+        'contact': '+91 9876543212',
+        'type': '1BHK',
+        'agreement_cost': 800000,
+        'amount': 800000,
+        'tax': 80000,
+        'refund': 25000,
+        'trust_fund': 30000,
+        'status': 'active',
+        'timeline': '2024-04-10',
+        'created_by': 'admin',
+        'created_at': '2024-01-20T09:15:00'
+    }
+]
+
 enquiries_db = []
 llm_config = {'model': 'gpt-3.5-turbo', 'api_key': ''}
 
@@ -319,6 +371,185 @@ def generate_report():
         
     except Exception as e:
         return jsonify({'error': f'Report generation failed: {str(e)}'}), 500
+
+# Booking endpoints (matching localhost functionality)
+@app.route('/api/bookings', methods=['GET'])
+def get_bookings():
+    """Get all bookings."""
+    try:
+        # Verify token
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'error': 'Authorization required'}), 401
+            
+        token = auth_header.split(' ')[1]
+        payload = verify_token(token)
+        if not payload:
+            return jsonify({'error': 'Invalid token'}), 401
+            
+        return jsonify({
+            'success': True,
+            'bookings': bookings_db
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to get bookings: {str(e)}'}), 500
+
+@app.route('/api/bookings', methods=['POST'])
+def create_booking():
+    """Create a new booking."""
+    try:
+        # Verify token
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'error': 'Authorization required'}), 401
+            
+        token = auth_header.split(' ')[1]
+        payload = verify_token(token)
+        if not payload:
+            return jsonify({'error': 'Invalid token'}), 401
+            
+        data = request.get_json()
+        
+        # Create new booking
+        new_booking = {
+            'id': len(bookings_db) + 1,
+            'customer_name': data.get('customer_name'),
+            'project': data.get('project'),
+            'contact': data.get('contact'),
+            'type': data.get('type'),
+            'agreement_cost': float(data.get('agreement_cost', 0)),
+            'amount': float(data.get('amount', 0)),
+            'tax': float(data.get('tax', 0)),
+            'refund': float(data.get('refund', 0)),
+            'trust_fund': float(data.get('trust_fund', 0)),
+            'status': data.get('status', 'active'),
+            'timeline': data.get('timeline'),
+            'created_by': payload['username'],
+            'created_at': datetime.now().isoformat()
+        }
+        
+        bookings_db.append(new_booking)
+        
+        return jsonify({
+            'success': True,
+            'booking': new_booking,
+            'message': 'Booking created successfully'
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to create booking: {str(e)}'}), 500
+
+@app.route('/api/bookings/<int:booking_id>', methods=['PUT'])
+def update_booking(booking_id):
+    """Update a booking."""
+    try:
+        # Verify token
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'error': 'Authorization required'}), 401
+            
+        token = auth_header.split(' ')[1]
+        payload = verify_token(token)
+        if not payload:
+            return jsonify({'error': 'Invalid token'}), 401
+            
+        data = request.get_json()
+        
+        # Find booking
+        booking = None
+        for b in bookings_db:
+            if b['id'] == booking_id:
+                booking = b
+                break
+                
+        if not booking:
+            return jsonify({'error': 'Booking not found'}), 404
+            
+        # Update booking
+        booking.update({
+            'customer_name': data.get('customer_name', booking['customer_name']),
+            'project': data.get('project', booking['project']),
+            'contact': data.get('contact', booking['contact']),
+            'type': data.get('type', booking['type']),
+            'agreement_cost': float(data.get('agreement_cost', booking['agreement_cost'])),
+            'amount': float(data.get('amount', booking['amount'])),
+            'tax': float(data.get('tax', booking['tax'])),
+            'refund': float(data.get('refund', booking['refund'])),
+            'trust_fund': float(data.get('trust_fund', booking['trust_fund'])),
+            'status': data.get('status', booking['status']),
+            'timeline': data.get('timeline', booking['timeline'])
+        })
+        
+        return jsonify({
+            'success': True,
+            'booking': booking,
+            'message': 'Booking updated successfully'
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to update booking: {str(e)}'}), 500
+
+@app.route('/api/bookings/<int:booking_id>', methods=['DELETE'])
+def delete_booking(booking_id):
+    """Delete a booking."""
+    try:
+        # Verify token
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'error': 'Authorization required'}), 401
+            
+        token = auth_header.split(' ')[1]
+        payload = verify_token(token)
+        if not payload:
+            return jsonify({'error': 'Invalid token'}), 401
+            
+        # Find and remove booking
+        global bookings_db
+        bookings_db = [b for b in bookings_db if b['id'] != booking_id]
+        
+        return jsonify({
+            'success': True,
+            'message': 'Booking deleted successfully'
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to delete booking: {str(e)}'}), 500
+
+# Analytics endpoints (matching localhost functionality)
+@app.route('/api/analytics/summary', methods=['GET'])
+def get_analytics_summary():
+    """Get analytics summary."""
+    try:
+        # Verify admin token
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'error': 'Authorization required'}), 401
+            
+        token = auth_header.split(' ')[1]
+        payload = verify_token(token)
+        if not payload or payload['role'] != 'admin':
+            return jsonify({'error': 'Admin access required'}), 403
+            
+        # Calculate analytics from bookings
+        total_bookings = len(bookings_db)
+        active_bookings = len([b for b in bookings_db if b['status'] == 'active'])
+        completed_bookings = len([b for b in bookings_db if b['status'] == 'complete'])
+        total_revenue = sum(b['amount'] for b in bookings_db)
+        
+        return jsonify({
+            'success': True,
+            'summary': {
+                'total_bookings': total_bookings,
+                'active_bookings': active_bookings,
+                'completed_bookings': completed_bookings,
+                'total_revenue': total_revenue,
+                'average_booking_value': total_revenue / total_bookings if total_bookings > 0 else 0
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to get analytics: {str(e)}'}), 500
 
 # Admin endpoints (matching localhost functionality)
 @app.route('/api/admin/enquiries', methods=['GET'])

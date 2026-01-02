@@ -13,16 +13,22 @@ class BookingApp {
     }
 
     async init() {
-        // Check authentication on page load
-        const isAuth = await authService.isAuthenticated();
-        if (isAuth) {
-            const user = authService.getCurrentUser();
-            if (user && user.role === 'customer') {
-                this.showCustomerPortal();
+        try {
+            // Check authentication on page load
+            const isAuth = await authService.isAuthenticated();
+            if (isAuth) {
+                const user = authService.getCurrentUser();
+                if (user && user.role === 'customer') {
+                    this.showCustomerPortal();
+                } else {
+                    this.showDashboard();
+                }
             } else {
-                this.showDashboard();
+                this.showLogin();
             }
-        } else {
+        } catch (error) {
+            console.error('Authentication check failed:', error);
+            // On error, show login
             this.showLogin();
         }
 
