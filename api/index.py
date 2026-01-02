@@ -9,13 +9,17 @@ try:
     # Import Flask app
     from app import create_app
     
-    # Create app instance
+    # Create app instance with production config
     app = create_app('production')
     
-    # Test route for debugging
-    @app.route('/test')
-    def test():
-        return {'status': 'working', 'message': 'Vercel deployment successful'}
+    # Override database configuration for serverless
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    
+    # Initialize database with sample data
+    with app.app_context():
+        from app.database import init_db
+        init_db()
         
 except Exception as e:
     # Fallback minimal app for debugging
@@ -24,8 +28,15 @@ except Exception as e:
     
     @app.route('/')
     def index():
-        return jsonify({'error': f'Import failed: {str(e)}', 'status': 'error'})
+        return jsonify({
+            'error': f'Import failed: {str(e)}', 
+            'status': 'error',
+            'message': 'Please check server logs for details'
+        })
     
     @app.route('/api/health')
     def health():
-        return jsonify({'error': f'Import failed: {str(e)}', 'status': 'error'})
+        return jsonify({
+            'error': f'Import failed: {str(e)}', 
+            'status': 'error'
+        })
