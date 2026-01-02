@@ -15,7 +15,12 @@ class BookingApp {
     init() {
         // Check authentication on page load
         if (authService.isAuthenticated()) {
-            this.showDashboard();
+            const user = authService.getCurrentUser();
+            if (user && user.role === 'customer') {
+                this.showCustomerPortal();
+            } else {
+                this.showDashboard();
+            }
         } else {
             this.showLogin();
         }
@@ -66,7 +71,12 @@ class BookingApp {
             if (result.success) {
                 UIUtils.showSuccess('Login successful! Redirecting...');
                 setTimeout(() => {
-                    this.showDashboard();
+                    const user = authService.getCurrentUser();
+                    if (user && user.role === 'customer') {
+                        this.showCustomerPortal();
+                    } else {
+                        this.showDashboard();
+                    }
                 }, 1000);
             } else {
                 UIUtils.showError(result.error);
@@ -81,15 +91,25 @@ class BookingApp {
     showLogin() {
         document.getElementById('login-container').style.display = 'flex';
         document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('customer-portal').style.display = 'none';
     }
 
     showDashboard() {
         document.getElementById('login-container').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
+        document.getElementById('customer-portal').style.display = 'none';
         
         this.updateUserInfo();
         this.setupDashboardTabs();
         this.loadBookings();
+    }
+
+    showCustomerPortal() {
+        document.getElementById('login-container').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('customer-portal').style.display = 'block';
+        
+        // Customer portal is handled by customer.js
     }
 
     updateUserInfo() {
@@ -122,6 +142,12 @@ class BookingApp {
             analyticsTab.style.display = 'none';
         }
 
+        // Hide admin-only tabs
+        const customersTab = document.querySelector('[data-tab="customers"]');
+        const llmConfigTab = document.querySelector('[data-tab="llm-config"]');
+        if (customersTab) customersTab.style.display = 'none';
+        if (llmConfigTab) llmConfigTab.style.display = 'none';
+
         // Hide certain booking actions for sales persons
         this.restrictBookingActions();
         
@@ -135,9 +161,12 @@ class BookingApp {
     applyAdminPermissions() {
         // Show all tabs for admin
         const analyticsTab = document.querySelector('[data-tab="analytics"]');
-        if (analyticsTab) {
-            analyticsTab.style.display = 'block';
-        }
+        const customersTab = document.querySelector('[data-tab="customers"]');
+        const llmConfigTab = document.querySelector('[data-tab="llm-config"]');
+        
+        if (analyticsTab) analyticsTab.style.display = 'block';
+        if (customersTab) customersTab.style.display = 'block';
+        if (llmConfigTab) llmConfigTab.style.display = 'block';
 
         // Enable all booking actions for admin
         this.enableAllBookingActions();
@@ -208,6 +237,17 @@ class BookingApp {
             this.loadBookings();
         } else if (tabName === 'analytics') {
             this.loadAnalytics();
+        } else if (tabName === 'customers') {
+            // Load customer enquiries (handled by admin.js)
+            if (window.adminPortal) {
+                window.adminPortal.loadCustomerEnquiries();
+                window.adminPortal.loadEnquiryStats();
+            }
+        } else if (tabName === 'llm-config') {
+            // Load LLM configuration (handled by admin.js)
+            if (window.adminPortal) {
+                window.adminPortal.loadLLMConfig();
+            }
         }
     }
 
@@ -216,8 +256,8 @@ class BookingApp {
         if (!user) return false;
 
         // Route guards based on user role
-        if (tabName === 'analytics') {
-            // Only admins can access analytics
+        if (tabName === 'analytics' || tabName === 'customers' || tabName === 'llm-config') {
+            // Only admins can access analytics and admin features
             return user.role === 'admin';
         } else if (tabName === 'bookings') {
             // Both admins and sales persons can access bookings

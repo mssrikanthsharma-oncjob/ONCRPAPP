@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>ONC REALTY PARTNERS - Booking System</title>
+    <title>ONC REALTY PARTNERS - Property Advisory</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <!-- PWA and mobile optimization meta tags -->
     <meta name="theme-color" content="#667eea">
@@ -27,7 +27,7 @@
                     <img src="{{ url_for('static', filename='logo.jpg') }}" alt="ONC Realty Partners Logo" class="login-logo">
                 </div>
                 <h1>ONC REALTY PARTNERS</h1>
-                <p>Booking Management System</p>
+                <p>Property Search & Advisory Platform</p>
             </div>
         
         <div class="form-container">
@@ -52,6 +52,7 @@
                 <h3>Demo Credentials</h3>
                 <p><strong>Admin:</strong> username: admin, password: admin123</p>
                 <p><strong>Sales:</strong> username: sales, password: sales123</p>
+                <p><strong>Customer:</strong> username: customer, password: customer123</p>
             </div>
             
             <!-- Footer inside login -->
@@ -78,6 +79,8 @@
             <div class="nav-tabs">
                 <button class="nav-tab active" data-tab="bookings">Bookings</button>
                 <button class="nav-tab" data-tab="analytics">Analytics</button>
+                <button class="nav-tab" data-tab="customers" style="display: none;">Customer Enquiries</button>
+                <button class="nav-tab" data-tab="llm-config" style="display: none;">LLM Configuration</button>
             </div>
 
             <!-- Bookings Tab -->
@@ -199,8 +202,293 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Customer Enquiries Tab (Admin only) -->
+            <div id="customers-tab" class="tab-content">
+                <div class="card">
+                    <h2>Customer Enquiries</h2>
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="total-enquiries">0</div>
+                            <div class="kpi-label">Total Enquiries</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="search-enquiries">0</div>
+                            <div class="kpi-label">Search Requests</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="advice-enquiries">0</div>
+                            <div class="kpi-label">Advice Requests</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-value" id="reports-generated">0</div>
+                            <div class="kpi-label">Reports Generated</div>
+                        </div>
+                    </div>
+                    
+                    <div class="search-filters">
+                        <div class="form-group">
+                            <select id="enquiry-type-filter">
+                                <option value="">All Types</option>
+                                <option value="search">Search</option>
+                                <option value="advice">Advice</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <button id="refresh-enquiries-btn" class="btn btn-primary">Refresh</button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Email</th>
+                                    <th>Type</th>
+                                    <th>Content</th>
+                                    <th>Report Generated</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="enquiries-tbody">
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 20px;">Loading enquiries...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LLM Configuration Tab (Admin only) -->
+            <div id="llm-config-tab" class="tab-content">
+                <div class="card">
+                    <h2>LLM Configuration</h2>
+                    <div id="llm-config-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="llm-model">GPT Model</label>
+                                <select id="llm-model" required>
+                                    <option value="">Select Model</option>
+                                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                    <option value="gpt-4">GPT-4</option>
+                                    <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                                    <option value="gpt-4o">GPT-4o</option>
+                                    <option value="gpt-4o-mini">GPT-4o Mini</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="api-key">API Key</label>
+                                <input type="password" id="api-key" placeholder="Enter OpenAI API Key" required>
+                            </div>
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <button id="save-llm-config-btn" class="btn btn-primary">Save Configuration</button>
+                            </div>
+                        </div>
+                        
+                        <div id="current-config" style="margin-top: 20px;">
+                            <h3>Current Configuration</h3>
+                            <div id="config-display">
+                                <p>No configuration found</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <!-- Footer inside dashboard -->
+            <div class="footer-inline">
+                <p>&copy; 2026 ONC REALTY PARTNERS. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Portal -->
+    <div id="customer-portal" class="dashboard" style="display: none;">
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <img src="{{ url_for('static', filename='logo.jpg') }}" alt="ONC Realty Partners Logo" class="navbar-logo">
+                <h1>Property Search & Advisory</h1>
+            </div>
+            <div class="user-info">
+                <span id="customer-user-role" class="user-role">CUSTOMER</span>
+                <button id="customer-logout-btn" class="logout-btn">Logout</button>
+            </div>
+        </nav>
+
+        <div class="main-content">
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-tab="search-property">Search Property</button>
+                <button class="nav-tab" data-tab="advise-property">Advise Property</button>
+                <button class="nav-tab" data-tab="generate-report">Generate Report</button>
+            </div>
+
+            <!-- Search Property Tab -->
+            <div id="search-property-tab" class="tab-content active">
+                <div class="card">
+                    <h2>Property Search</h2>
+                    
+                    <!-- Search Form -->
+                    <div id="search-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="search-location">Location</label>
+                                <input type="text" id="search-location" placeholder="Enter city or area">
+                            </div>
+                            <div class="form-group">
+                                <label for="search-property-type">Property Type</label>
+                                <select id="search-property-type">
+                                    <option value="">Select Type</option>
+                                    <option value="1BHK">1BHK</option>
+                                    <option value="2BHK">2BHK</option>
+                                    <option value="3BHK">3BHK</option>
+                                    <option value="4BHK">4BHK</option>
+                                    <option value="Villa">Villa</option>
+                                    <option value="Plot">Plot</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="search-budget-min">Min Budget (₹)</label>
+                                <input type="number" id="search-budget-min" placeholder="Minimum budget">
+                            </div>
+                            <div class="form-group">
+                                <label for="search-budget-max">Max Budget (₹)</label>
+                                <input type="number" id="search-budget-max" placeholder="Maximum budget">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <button id="search-properties-btn" class="btn btn-primary">Search Properties</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Search Results -->
+                    <div id="search-results" style="margin-top: 20px;">
+                        <!-- Results will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advise Property Tab -->
+            <div id="advise-property-tab" class="tab-content">
+                <div class="card">
+                    <h2>Property Advisory</h2>
+                    
+                    <!-- Advisory Form -->
+                    <div id="advice-form">
+                        <div class="form-group">
+                            <label for="advice-request">Describe Your Requirements</label>
+                            <textarea id="advice-request" rows="6" placeholder="Tell us about your property requirements, budget, preferred location, purpose (investment/residence), timeline, etc."></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <button id="get-advice-btn" class="btn btn-primary">Get Property Advice</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Advice Results -->
+                    <div id="advice-results" style="margin-top: 20px;">
+                        <!-- Advice will be populated here -->
+                    </div>
+                </div>
+            </div>
+            <!-- Generate Report Tab -->
+            <div id="generate-report-tab" class="tab-content">
+                <div class="card">
+                    <h2>Generate Report</h2>
+                    
+                    <!-- Email Verification Section -->
+                    <div id="email-verification" class="card" style="margin-bottom: 20px;">
+                        <h3>Email Verification Required</h3>
+                        <p>Please verify your email address to generate and download comprehensive property reports in PDF format.</p>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="customer-email">Email Address</label>
+                                <input type="email" id="customer-email" placeholder="Enter your email" required>
+                            </div>
+                            <div class="form-group">
+                                <button id="send-otp-btn" class="btn btn-primary">Send OTP</button>
+                            </div>
+                        </div>
+                        <div class="form-row" id="otp-section" style="display: none;">
+                            <div class="form-group">
+                                <label for="otp-code">OTP Code</label>
+                                <input type="text" id="otp-code" placeholder="Enter 6-digit OTP" maxlength="6">
+                            </div>
+                            <div class="form-group">
+                                <button id="verify-otp-btn" class="btn btn-primary">Verify OTP</button>
+                            </div>
+                        </div>
+                        <div id="verification-status" class="success-message" style="display: none;">
+                            Email verified successfully! You can now generate reports.
+                        </div>
+                    </div>
+                    
+                    <!-- Report Generation Section -->
+                    <div id="report-generation" style="opacity: 0.5; pointer-events: none;">
+                        <div class="card">
+                            <h3>Available Reports</h3>
+                            <p>Generate comprehensive PDF reports based on your property searches and advisory sessions.</p>
+                            
+                            <div id="enquiry-summary" style="margin-bottom: 20px;">
+                                <h4>Your Activity Summary</h4>
+                                <div id="activity-stats">
+                                    <div class="activity-item">
+                                        <span class="activity-label">Property Searches:</span>
+                                        <span id="search-count">0</span>
+                                    </div>
+                                    <div class="activity-item">
+                                        <span class="activity-label">Advisory Sessions:</span>
+                                        <span id="advice-count">0</span>
+                                    </div>
+                                    <div class="activity-item">
+                                        <span class="activity-label">Total Enquiries:</span>
+                                        <span id="total-enquiries">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="report-type">Report Type</label>
+                                    <select id="report-type">
+                                        <option value="comprehensive">Comprehensive Report (All Activities)</option>
+                                        <option value="search-only">Property Search Report Only</option>
+                                        <option value="advice-only">Advisory Report Only</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="report-format">Format</label>
+                                    <select id="report-format">
+                                        <option value="pdf">PDF Document</option>
+                                        <option value="email">Email + PDF Attachment</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <button id="generate-pdf-report-btn" class="btn btn-primary" disabled>Generate PDF Report</button>
+                                </div>
+                                <div class="form-group">
+                                    <button id="download-report-btn" class="btn btn-demo" disabled style="display: none;">Download Report</button>
+                                </div>
+                            </div>
+                            
+                            <div id="report-status" style="margin-top: 20px; display: none;">
+                                <!-- Report generation status will be shown here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer inside customer portal -->
             <div class="footer-inline">
                 <p>&copy; 2026 ONC REALTY PARTNERS. All rights reserved.</p>
             </div>
@@ -218,6 +506,8 @@
     <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bookings.js') }}"></script>
     <script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/customer.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

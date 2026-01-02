@@ -131,7 +131,7 @@ def admin_required(f):
 def auth_required(allowed_roles=None):
     """Decorator to require specific roles for protected routes."""
     if allowed_roles is None:
-        allowed_roles = ['admin', 'sales_person']
+        allowed_roles = ['admin', 'sales_person', 'customer']
     
     def decorator(f):
         @wraps(f)

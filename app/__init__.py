@@ -27,9 +27,14 @@ def create_app(config_name='default'):
     from app.auth.routes import auth_bp
     from app.booking.routes import booking_bp
     from app.analytics.routes import analytics_bp
+    from app.customer.routes import customer_bp
+    from app.admin.routes import admin_bp
+    
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(booking_bp, url_prefix='/api/bookings')
     app.register_blueprint(analytics_bp, url_prefix='/api/analytics')
+    app.register_blueprint(customer_bp, url_prefix='/api/customer')
+    app.register_blueprint(admin_bp, url_prefix='/api/admin')
     
     # Additional blueprints will be added in later tasks
     # Analytics blueprint is now registered above

@@ -1,7 +1,7 @@
 """Database initialization and management utilities."""
 from datetime import datetime, timedelta
 from app import db
-from app.models import User, Booking
+from app.models import User, Booking, CustomerEnquiry, LLMConfig
 
 
 def init_database():
@@ -13,6 +13,7 @@ def init_database():
     # Check if demo users already exist
     admin_user = User.query.filter_by(username='admin').first()
     sales_user = User.query.filter_by(username='sales').first()
+    customer_user = User.query.filter_by(username='customer').first()
     
     # Create demo admin user if not exists
     if not admin_user:
@@ -32,6 +33,16 @@ def init_database():
         )
         db.session.add(sales_user)
     
+    # Create demo customer if not exists
+    if not customer_user:
+        customer_user = User(
+            username='customer',
+            password='customer123',
+            role='customer',
+            email='customer@example.com'
+        )
+        db.session.add(customer_user)
+    
     # Commit users first to get their IDs
     try:
         db.session.commit()
@@ -47,6 +58,7 @@ def init_database():
     print("Database initialized successfully with demo users:")
     print("- Admin: username='admin', password='admin123'")
     print("- Sales: username='sales', password='sales123'")
+    print("- Customer: username='customer', password='customer123'")
     print(f"- {Booking.query.count()} booking records available")
 
 
@@ -280,8 +292,8 @@ def create_user(username, password, role):
     if User.query.filter_by(username=username).first():
         raise ValueError(f"User '{username}' already exists")
     
-    if role not in ['admin', 'sales_person']:
-        raise ValueError(f"Invalid role '{role}'. Must be 'admin' or 'sales_person'")
+    if role not in ['admin', 'sales_person', 'customer']:
+        raise ValueError(f"Invalid role '{role}'. Must be 'admin', 'sales_person', or 'customer'")
     
     user = User(username=username, password=password, role=role)
     db.session.add(user)
