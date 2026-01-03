@@ -141,7 +141,10 @@ class BookingApp {
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('customer-portal').style.display = 'block';
         
-        // Customer portal is handled by customer.js
+        // Load customer data after showing the portal
+        if (window.customerPortal) {
+            window.customerPortal.loadActivitySummary();
+        }
     }
 
     updateUserInfo() {

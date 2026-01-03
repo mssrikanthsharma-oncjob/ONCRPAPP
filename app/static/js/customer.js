@@ -15,8 +15,8 @@ class CustomerPortal {
         this.checkEmailVerification();
         // Enable search and advice forms by default
         this.enableForms();
-        // Load activity summary
-        this.loadActivitySummary();
+        // Don't load activity summary immediately - wait for authentication
+        // Data will be loaded when the customer portal is shown
     }
 
     bindEvents() {

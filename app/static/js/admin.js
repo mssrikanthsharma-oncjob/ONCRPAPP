@@ -10,9 +10,8 @@ class AdminPortal {
 
     init() {
         this.bindEvents();
-        this.loadLLMConfig();
-        this.loadCustomerEnquiries();
-        this.loadEnquiryStats();
+        // Don't load data immediately - wait for authentication
+        // Data will be loaded when tabs are switched to
     }
 
     bindEvents() {
