@@ -1,97 +1,26 @@
-"""Vercel-compatible Flask application matching localhost functionality."""
+"""Simple Vercel-compatible Flask application."""
 import os
 import sys
 import jwt
 from datetime import datetime, timedelta
-from flask import Flask, jsonify, render_template, send_from_directory, request
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 
-# Add parent directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+app = Flask(__name__)
 
-# Get the correct paths for Vercel
-current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(current_dir)
-template_dir = os.path.join(parent_dir, 'app', 'templates')
-static_dir = os.path.join(parent_dir, 'app', 'static')
-
-app = Flask(__name__, 
-           template_folder=template_dir,
-           static_folder=static_dir)
-
-# Configuration matching localhost
+# Configuration
 app.config['SECRET_KEY'] = 'dev-secret-key-2024'
 app.config['JWT_SECRET_KEY'] = 'jwt-secret-key-2024'
 
 # Enable CORS
 CORS(app, origins=['https://oncrp.vercel.app', 'http://localhost:5001'])
 
-# Simple in-memory storage for demo (matching localhost structure)
+# Simple in-memory storage
 users_db = {
     'admin': {'password': 'admin123', 'role': 'admin'},
     'sales': {'password': 'sales123', 'role': 'sales_person'},
     'customer': {'password': 'customer123', 'role': 'customer'}
 }
-
-# Demo booking data (matching localhost)
-bookings_db = [
-    {
-        'id': 1,
-        'customer_name': 'Rajesh Kumar',
-        'project_name': 'Sunrise Apartments',
-        'contact_number': '9876543210',
-        'type': '2BHK',
-        'area': 1200.0,
-        'agreement_cost': 5000000.0,
-        'amount': 4800000.0,
-        'tax_gst': 240000.0,
-        'refund_buyer': 100000.0,
-        'refund_referral': 50000.0,
-        'onc_trust_fund': 200000.0,
-        'oncct_funded': 150000.0,
-        'invoice_status': 'Paid',
-        'timeline': '2025-03-30',
-        'loan_req': 'yes',
-        'status': 'active',
-        'created_by': 'admin'
-    },
-    {
-        'id': 2,
-        'customer_name': 'Priya Sharma',
-        'project_name': 'Green Valley',
-        'contact_number': '9876543211',
-        'type': '3BHK',
-        'area': 1500.0,
-        'agreement_cost': 7500000.0,
-        'amount': 7200000.0,
-        'tax_gst': 360000.0,
-        'refund_buyer': 150000.0,
-        'refund_referral': 75000.0,
-        'onc_trust_fund': 300000.0,
-        'oncct_funded': 225000.0,
-        'invoice_status': 'Pending',
-        'timeline': '2025-04-15',
-        'loan_req': 'no',
-        'status': 'complete',
-        'created_by': 'sales'
-    }
-]
-
-# Demo enquiries and LLM config
-enquiries_db = []
-llm_config = {
-    'model_name': 'gpt-3.5-turbo',
-    'api_key': '',
-    'is_active': True
-}
-
-available_models = [
-    'gpt-3.5-turbo',
-    'gpt-4',
-    'gpt-4-turbo',
-    'gpt-4o',
-    'gpt-4o-mini'
-]
 
 def generate_token(username, role):
     """Generate JWT token."""
@@ -114,11 +43,135 @@ def verify_token(token):
 
 @app.route('/')
 def index():
-    """Serve the main application using the actual localhost template."""
-    try:
-        return render_template('index.html')
-    except Exception as e:
-        return jsonify({'error': f'Template error: {str(e)}'}), 500
+    """Serve the main application."""
+    return '''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ONC REALTY PARTNERS - Property Advisory</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .container { max-width: 500px; margin: 50px auto; background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #2c3e50; margin-bottom: 10px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50; }
+        .form-group input { width: 100%; padding: 12px; border: 2px solid #ecf0f1; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
+        .btn { background: linear-gradient(135deg, #3498db, #2980b9); color: white; padding: 12px 30px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; }
+        .demo-credentials { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 25px; }
+        .error-message, .success-message { padding: 12px; border-radius: 8px; margin-bottom: 20px; display: none; }
+        .error-message { background: #fee; color: #c0392b; }
+        .success-message { background: #efe; color: #27ae60; }
+        .dashboard { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="login-container">
+            <div class="header">
+                <h1>ONC REALTY PARTNERS</h1>
+                <p>Property Search & Advisory Platform</p>
+            </div>
+            
+            <div id="error-message" class="error-message"></div>
+            <div id="success-message" class="success-message"></div>
+            
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required placeholder="Enter your username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required placeholder="Enter your password">
+                </div>
+                <button type="submit" class="btn">Login</button>
+            </form>
+            
+            <div class="demo-credentials">
+                <h3>Demo Credentials</h3>
+                <p><strong>Admin:</strong> admin / admin123</p>
+                <p><strong>Sales:</strong> sales / sales123</p>
+                <p><strong>Customer:</strong> customer / customer123</p>
+            </div>
+        </div>
+        
+        <div id="dashboard" class="dashboard">
+            <div class="header">
+                <h1>Welcome to ONC REALTY PARTNERS</h1>
+                <p>You are logged in as: <span id="user-info"></span></p>
+                <button class="btn" onclick="logout()">Logout</button>
+            </div>
+            <div style="margin-top: 30px; text-align: center;">
+                <p>This is a demo version of the Property Advisory Platform.</p>
+                <p>For full functionality including property search, AI-powered advice, and PDF reports, please use the localhost version at http://127.0.0.1:5001</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error-message');
+            const successDiv = document.getElementById('success-message');
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    successDiv.textContent = 'Login successful!';
+                    successDiv.style.display = 'block';
+                    errorDiv.style.display = 'none';
+                    
+                    const token = data.data ? data.data.token : data.token;
+                    const user = data.data ? data.data.user : data.user;
+                    
+                    localStorage.setItem('jwt_token', token);
+                    localStorage.setItem('user', JSON.stringify(user));
+                    
+                    document.getElementById('user-info').textContent = user.username + ' (' + user.role + ')';
+                    document.getElementById('login-container').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'block';
+                } else {
+                    errorDiv.textContent = data.error || 'Login failed';
+                    errorDiv.style.display = 'block';
+                    successDiv.style.display = 'none';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Network error. Please try again.';
+                errorDiv.style.display = 'block';
+                successDiv.style.display = 'none';
+            }
+        });
+        
+        function logout() {
+            localStorage.clear();
+            location.reload();
+        }
+        
+        // Check if already logged in
+        window.addEventListener('load', function() {
+            const token = localStorage.getItem('jwt_token');
+            const user = localStorage.getItem('user');
+            if (token && user) {
+                const userData = JSON.parse(user);
+                document.getElementById('user-info').textContent = userData.username + ' (' + userData.role + ')';
+                document.getElementById('login-container').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>'''
 
 @app.route('/api/health')
 def health():
@@ -130,15 +183,6 @@ def health():
         'environment': 'production'
     })
 
-@app.route('/static/<path:filename>')
-def static_files(filename):
-    """Serve static files."""
-    try:
-        return send_from_directory(static_dir, filename)
-    except Exception as e:
-        return jsonify({'error': f'Static file not found: {filename}'}), 404
-
-# Authentication endpoints (matching localhost exactly)
 @app.route('/api/auth/login', methods=['POST'])
 def login():
     """User login endpoint."""
@@ -157,7 +201,7 @@ def login():
         token = generate_token(username, user['role'])
         
         return jsonify({
-            'data': {  # Match localhost response format
+            'data': {
                 'token': token,
                 'user': {
                     'username': username,
@@ -168,252 +212,6 @@ def login():
         
     except Exception as e:
         return jsonify({'error': f'Login failed: {str(e)}'}), 500
-
-@app.route('/api/auth/verify', methods=['POST'])
-def verify():
-    """Token verification endpoint."""
-    try:
-        data = request.get_json()
-        token = data.get('token')
-        
-        if not token:
-            return jsonify({'error': 'Token required'}), 400
-            
-        payload = verify_token(token)
-        if not payload:
-            return jsonify({'error': 'Invalid token'}), 401
-            
-        return jsonify({
-            'valid': True,
-            'user': {
-                'username': payload['username'],
-                'role': payload['role']
-            }
-        })
-        
-    except Exception as e:
-        return jsonify({'error': f'Verification failed: {str(e)}'}), 500
-
-# Booking endpoints (matching localhost functionality)
-@app.route('/api/bookings', methods=['GET'])
-def get_bookings():
-    """Get all bookings."""
-    try:
-        # Verify token
-        auth_header = request.headers.get('Authorization')
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return jsonify({'error': 'Authorization required'}), 401
-            
-        token = auth_header.split(' ')[1]
-        payload = verify_token(token)
-        if not payload:
-            return jsonify({'error': 'Invalid token'}), 401
-            
-        return jsonify(bookings_db)
-        
-    except Exception as e:
-        return jsonify({'error': f'Failed to get bookings: {str(e)}'}), 500
-
-# Customer endpoints (matching localhost functionality)
-@app.route('/api/customer/search-properties', methods=['POST'])
-def search_properties():
-    """Property search endpoint."""
-    try:
-        # Verify token
-        auth_header = request.headers.get('Authorization')
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return jsonify({'error': 'Authorization required'}), 401
-            
-        data = request.get_json()
-        
-        # Demo property search results (same as localhost)
-        properties = [
-            {
-                'id': 1,
-                'title': 'Beautiful 2BHK Apartment in Mumbai',
-                'location': 'Bandra West, Mumbai',
-                'price': 12000000,
-                'area': '850 sq ft',
-                'bedrooms': 2,
-                'bathrooms': 2,
-                'description': 'Modern apartment with sea view',
-                'image_url': 'https://via.placeholder.com/300x200',
-                'contact': '+91-9876543210'
-            },
-            {
-                'id': 2,
-                'title': 'Spacious 3BHK Villa in Pune',
-                'location': 'Koregaon Park, Pune',
-                'price': 8500000,
-                'area': '1200 sq ft',
-                'bedrooms': 3,
-                'bathrooms': 3,
-                'description': 'Spacious villa with garden',
-                'image_url': 'https://via.placeholder.com/300x200',
-                'contact': '+91-9876543211'
-            }
-        ]
-        
-        return jsonify({
-            'results': properties
-        })
-        
-    except Exception as e:
-        return jsonify({'error': f'Search failed: {str(e)}'}), 500
-
-@app.route('/api/customer/get-property-advice', methods=['POST'])
-def get_property_advice():
-    """Property advice endpoint."""
-    try:
-        # Verify token
-        auth_header = request.headers.get('Authorization')
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return jsonify({'error': 'Authorization required'}), 401
-            
-        data = request.get_json()
-        advice_request = data.get('advice_request', '')
-        
-        # Demo advice response (same as localhost fallback)
-        if 'investment' in advice_request.lower():
-            advice = """**Investment Advisory (Demo Version)**
-
-Based on your investment query, here are key recommendations:
-
-1. **Location Analysis**: Focus on areas with upcoming infrastructure development
-2. **Property Type**: 2BHK and 3BHK apartments offer better rental yields
-3. **Budget Planning**: Allocate 70-80% for property, 20-30% for additional costs
-4. **Legal Verification**: Verify RERA registration and clear title
-5. **Market Timing**: Current conditions favor investment with stable prices
-
-*Note: This is a demo response. For AI-powered personalized advice, please use the localhost version with OpenAI integration.*"""
-        elif 'first home' in advice_request.lower() or 'buying' in advice_request.lower():
-            advice = """**First Home Buyer Guide (Demo Version)**
-
-Congratulations on planning your first home purchase!
-
-1. **Financial Planning**: EMI should not exceed 40% of monthly income
-2. **Location Priorities**: Consider commute, amenities, and connectivity
-3. **Legal Checklist**: RERA registration, clear title, approved plans
-4. **Home Loan**: Compare rates and consider pre-approval
-5. **Future Value**: Research resale potential and area development
-
-*Note: This is a demo response. For AI-powered personalized advice, please use the localhost version with OpenAI integration.*"""
-        else:
-            advice = f"""**Property Advisory (Demo Version)**
-
-Thank you for your inquiry: "{advice_request}"
-
-General recommendations:
-1. Research local market trends and pricing
-2. Verify all legal documents and RERA registration
-3. Plan finances including additional costs
-4. Consider location connectivity and amenities
-5. Consult with local real estate experts
-
-*Note: This is a demo response. For AI-powered personalized advice, please use the localhost version with OpenAI integration.*"""
-        
-        return jsonify({
-            'advice': advice
-        })
-        
-    except Exception as e:
-        return jsonify({'error': f'Advice failed: {str(e)}'}), 500
-
-# Admin endpoints (matching localhost functionality)
-@app.route('/api/admin/llm-config', methods=['GET', 'POST'])
-def llm_config_endpoint():
-    """LLM configuration endpoint."""
-    try:
-        # Verify admin token
-        auth_header = request.headers.get('Authorization')
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return jsonify({'error': 'Authorization required'}), 401
-            
-        token = auth_header.split(' ')[1]
-        payload = verify_token(token)
-        if not payload or payload['role'] != 'admin':
-            return jsonify({'error': 'Admin access required'}), 403
-            
-        if request.method == 'GET':
-            return jsonify({
-                'config': {
-                    'model_name': llm_config.get('model_name', 'gpt-3.5-turbo'),
-                    'api_key': '***' + llm_config.get('api_key', '')[-4:] if llm_config.get('api_key') and len(llm_config.get('api_key', '')) > 4 else '***',
-                    'is_active': llm_config.get('is_active', True)
-                },
-                'available_models': available_models
-            })
-        else:
-            data = request.get_json()
-            if data:
-                # Update global config
-                global llm_config
-                if 'model_name' in data:
-                    llm_config['model_name'] = data['model_name']
-                if 'api_key' in data:
-                    llm_config['api_key'] = data['api_key']
-                if 'is_active' in data:
-                    llm_config['is_active'] = data['is_active']
-                    
-                return jsonify({
-                    'message': 'LLM configuration saved successfully',
-                    'config': {
-                        'model_name': llm_config.get('model_name'),
-                        'api_key': '***' + llm_config.get('api_key', '')[-4:] if llm_config.get('api_key') and len(llm_config.get('api_key', '')) > 4 else '***',
-                        'is_active': llm_config.get('is_active', True)
-                    }
-                })
-            else:
-                return jsonify({'error': 'No data provided'}), 400
-            
-    except Exception as e:
-        return jsonify({'error': f'LLM config failed: {str(e)}'}), 500
-
-@app.route('/api/customer/get-activity-summary', methods=['GET'])
-def get_activity_summary():
-    """Get customer activity summary."""
-    try:
-        return jsonify({
-            'total_enquiries': len(enquiries_db),
-            'search_count': len([e for e in enquiries_db if e.get('type') == 'search']),
-            'advice_count': len([e for e in enquiries_db if e.get('type') == 'advice'])
-        })
-        
-    except Exception as e:
-        return jsonify({'error': f'Failed to get activity summary: {str(e)}'}), 500
-
-@app.route('/api/admin/customer-enquiries', methods=['GET'])
-def get_customer_enquiries():
-    """Get customer enquiries."""
-    try:
-        # Verify admin token
-        auth_header = request.headers.get('Authorization')
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return jsonify({'error': 'Authorization required'}), 401
-            
-        return jsonify(enquiries_db)
-        
-    except Exception as e:
-        return jsonify({'error': f'Failed to get enquiries: {str(e)}'}), 500
-
-@app.route('/api/admin/customer-enquiries/stats', methods=['GET'])
-def get_enquiry_stats():
-    """Get customer enquiry statistics."""
-    try:
-        # Verify admin token
-        auth_header = request.headers.get('Authorization')
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return jsonify({'error': 'Authorization required'}), 401
-            
-        return jsonify({
-            'total_enquiries': len(enquiries_db),
-            'search_enquiries': len([e for e in enquiries_db if e.get('type') == 'search']),
-            'advice_enquiries': len([e for e in enquiries_db if e.get('type') == 'advice']),
-            'report_enquiries': len([e for e in enquiries_db if e.get('type') == 'report'])
-        })
-        
-    except Exception as e:
-        return jsonify({'error': f'Failed to get enquiry stats: {str(e)}'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
