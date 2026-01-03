@@ -124,17 +124,17 @@ Please provide comprehensive property advice addressing the customer's query. In
             
             return advice
             
-        except openai.AuthenticationError:
+        except openai.AuthenticationError as e:
             return "Invalid OpenAI API key. Please contact administrator to verify the API key configuration."
         
-        except openai.RateLimitError:
+        except openai.RateLimitError as e:
             return "OpenAI API rate limit exceeded. Please try again in a few minutes or contact administrator."
         
         except openai.APIError as e:
             return f"OpenAI API error: {str(e)}. Please try again or contact administrator."
         
         except Exception as e:
-            # Log the error for debugging
+            # Log the error for debugging (keep minimal logging)
             print(f"Error in get_property_advice: {str(e)}")
             
             # Fallback to mock response if OpenAI fails

@@ -10,6 +10,13 @@ from flask_cors import CORS
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Import OpenAI for LLM functionality
+try:
+    import openai
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+
 # Get the correct paths for Vercel
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -167,7 +174,11 @@ bookings_db = [
 ]
 
 enquiries_db = []
-llm_config = {'model': 'gpt-3.5-turbo', 'api_key': ''}
+llm_config = {
+    'model_name': 'gpt-3.5-turbo', 
+    'api_key': '',
+    'is_active': True
+}
 
 # Available LLM models
 available_models = [
@@ -397,34 +408,24 @@ def search_property():
 
 @app.route('/api/customer/advise-property', methods=['POST'])
 def advise_property():
-    """Property advice endpoint."""
+    """Property advice endpoint with OpenAI integration."""
     try:
         data = request.get_json()
+        advice_request = data.get('advice_request', '')
         
-        # Demo advice response (same as localhost)
-        advice = {
-            'recommendation': 'Based on your requirements, I recommend looking for properties in Bandra or Andheri areas.',
-            'factors': [
-                'Good connectivity to business districts',
-                'Excellent schools and hospitals nearby',
-                'Strong appreciation potential',
-                'Well-developed infrastructure'
-            ],
-            'budget_analysis': 'Your budget is suitable for the selected property types in these areas.',
-            'next_steps': [
-                'Visit shortlisted properties',
-                'Check legal documents',
-                'Negotiate price based on market rates',
-                'Consider loan pre-approval'
-            ]
-        }
+        if not advice_request:
+            return jsonify({'error': 'Advice request is required'}), 400
+        
+        # Get LLM-powered advice
+        advice_text = get_property_advice_llm(advice_request)
         
         # Store enquiry
         enquiry = {
             'id': len(enquiries_db) + 1,
             'type': 'advice',
             'content': data,
-            'advice': advice,
+            'advice_request': advice_request,
+            'llm_response': advice_text,
             'timestamp': datetime.now().isoformat(),
             'email': data.get('email', 'anonymous')
         }
@@ -432,12 +433,128 @@ def advise_property():
         
         return jsonify({
             'success': True,
-            'advice': advice,
+            'advice': advice_text,
             'message': 'Property advice generated'
         })
         
     except Exception as e:
         return jsonify({'error': f'Advice failed: {str(e)}'}), 500
+
+def get_property_advice_llm(advice_request):
+    """Get property advice using OpenAI LLM (same as localhost)."""
+    # Check if LLM is configured
+    if not llm_config.get('api_key') or not llm_config.get('is_active'):
+        return get_fallback_advice(advice_request)
+    
+    if not OPENAI_AVAILABLE:
+        return get_fallback_advice(advice_request)
+    
+    try:
+        # Initialize OpenAI client
+        client = openai.OpenAI(api_key=llm_config['api_key'])
+        
+        # Create system prompt
+        system_prompt = """You are an expert real estate advisor for ONC REALTY PARTNERS, a premium property advisory firm in India. 
+
+Your expertise includes:
+- Indian real estate market trends and regulations
+- Property investment strategies
+- Legal compliance (RERA, stamp duty, registration)
+- Location analysis and infrastructure development
+- Home loan processes and financial planning
+- Property valuation and market analysis
+
+Guidelines for responses:
+- Provide practical, actionable advice
+- Consider Indian market conditions and regulations
+- Include specific recommendations when possible
+- Mention legal compliance requirements
+- Be professional yet approachable
+- Ask clarifying questions when needed
+- Provide structured responses with clear sections
+
+Always prioritize customer safety and legal compliance in your recommendations."""
+
+        # Create user prompt
+        user_prompt = f"""Property Advisory Request: {advice_request}
+
+Please provide comprehensive property advice addressing the customer's query. Include relevant market insights, legal considerations, financial planning tips, and actionable next steps where applicable."""
+
+        # Make API call to OpenAI
+        response = client.chat.completions.create(
+            model=llm_config.get('model_name', 'gpt-3.5-turbo'),
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            max_tokens=1000,
+            temperature=0.7,
+            top_p=1.0,
+            frequency_penalty=0.0,
+            presence_penalty=0.0
+        )
+        
+        # Extract advice
+        advice = response.choices[0].message.content.strip()
+        
+        # Add professional footer
+        advice += "\n\n---\n*This advice is generated by ONC REALTY PARTNERS' AI advisory system. For personalized consultation, please contact our expert team.*"
+        
+        return advice
+        
+    except openai.AuthenticationError:
+        return "Invalid OpenAI API key. Please contact administrator to verify the API key configuration."
+    
+    except openai.RateLimitError:
+        return "OpenAI API rate limit exceeded. Please try again in a few minutes or contact administrator."
+    
+    except openai.APIError as e:
+        return f"OpenAI API error: {str(e)}. Please try again or contact administrator."
+    
+    except Exception as e:
+        return get_fallback_advice(advice_request)
+
+def get_fallback_advice(advice_request):
+    """Fallback advice when OpenAI is not available (same as localhost)."""
+    if 'investment' in advice_request.lower():
+        return """**Investment Advisory (Fallback Mode)**
+
+Based on your investment query, here are key recommendations:
+
+1. **Location Analysis**: Focus on areas with upcoming infrastructure development
+2. **Property Type**: 2BHK and 3BHK apartments offer better rental yields
+3. **Budget Planning**: Allocate 70-80% for property, 20-30% for additional costs
+4. **Legal Verification**: Verify RERA registration and clear title
+5. **Market Timing**: Current conditions favor investment with stable prices
+
+*Note: This is a fallback response. For AI-powered personalized advice, please ensure OpenAI API is properly configured.*"""
+    
+    elif 'first home' in advice_request.lower() or 'buying' in advice_request.lower():
+        return """**First Home Buyer Guide (Fallback Mode)**
+
+Congratulations on planning your first home purchase!
+
+1. **Financial Planning**: EMI should not exceed 40% of monthly income
+2. **Location Priorities**: Consider commute, amenities, and connectivity
+3. **Legal Checklist**: RERA registration, clear title, approved plans
+4. **Home Loan**: Compare rates and consider pre-approval
+5. **Future Value**: Research resale potential and area development
+
+*Note: This is a fallback response. For AI-powered personalized advice, please ensure OpenAI API is properly configured.*"""
+    
+    else:
+        return f"""**Property Advisory (Fallback Mode)**
+
+Thank you for your inquiry: "{advice_request}"
+
+General recommendations:
+1. Research local market trends and pricing
+2. Verify all legal documents and RERA registration
+3. Plan finances including additional costs
+4. Consider location connectivity and amenities
+5. Consult with local real estate experts
+
+*Note: This is a fallback response. For AI-powered personalized advice, please ensure OpenAI API is properly configured in the admin panel.*"""
 
 @app.route('/api/customer/send-otp', methods=['POST'])
 def send_otp():
@@ -703,8 +820,8 @@ def get_analytics_summary():
         return jsonify({'error': f'Failed to get analytics: {str(e)}'}), 500
 
 # Admin endpoints (matching localhost functionality)
-@app.route('/api/admin/enquiries', methods=['GET'])
-def get_enquiries():
+@app.route('/api/admin/customer-enquiries', methods=['GET'])
+def get_customer_enquiries():
     """Get customer enquiries."""
     try:
         # Verify admin token
@@ -725,6 +842,64 @@ def get_enquiries():
     except Exception as e:
         return jsonify({'error': f'Failed to get enquiries: {str(e)}'}), 500
 
+@app.route('/api/admin/customer-enquiries/stats', methods=['GET'])
+def get_enquiry_stats():
+    """Get customer enquiry statistics."""
+    try:
+        # Verify admin token
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'error': 'Authorization required'}), 401
+            
+        token = auth_header.split(' ')[1]
+        payload = verify_token(token)
+        if not payload or payload['role'] != 'admin':
+            return jsonify({'error': 'Admin access required'}), 403
+            
+        # Calculate stats
+        total_enquiries = len(enquiries_db)
+        search_enquiries = len([e for e in enquiries_db if e['type'] == 'search'])
+        advice_enquiries = len([e for e in enquiries_db if e['type'] == 'advice'])
+        report_enquiries = len([e for e in enquiries_db if e['type'] == 'report'])
+        
+        return jsonify({
+            'success': True,
+            'stats': {
+                'total_enquiries': total_enquiries,
+                'search_enquiries': search_enquiries,
+                'advice_enquiries': advice_enquiries,
+                'report_enquiries': report_enquiries
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to get enquiry stats: {str(e)}'}), 500
+
+@app.route('/api/customer/get-activity-summary', methods=['GET'])
+def get_activity_summary():
+    """Get customer activity summary."""
+    try:
+        # This endpoint doesn't require authentication for demo purposes
+        # In production, you might want to add customer authentication
+        
+        # Calculate summary from enquiries
+        total_searches = len([e for e in enquiries_db if e['type'] == 'search'])
+        total_advice = len([e for e in enquiries_db if e['type'] == 'advice'])
+        total_reports = len([e for e in enquiries_db if e['type'] == 'report'])
+        
+        return jsonify({
+            'success': True,
+            'summary': {
+                'total_searches': total_searches,
+                'total_advice_requests': total_advice,
+                'total_reports_generated': total_reports,
+                'last_activity': enquiries_db[-1]['timestamp'] if enquiries_db else None
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to get activity summary: {str(e)}'}), 500
+
 @app.route('/api/admin/llm-config', methods=['GET', 'POST'])
 def llm_config_endpoint():
     """LLM configuration endpoint."""
@@ -742,7 +917,11 @@ def llm_config_endpoint():
         if request.method == 'GET':
             return jsonify({
                 'success': True,
-                'config': llm_config,
+                'config': {
+                    'model_name': llm_config.get('model_name', 'gpt-3.5-turbo'),
+                    'api_key': '***' + llm_config.get('api_key', '')[-4:] if llm_config.get('api_key') and len(llm_config.get('api_key', '')) > 4 else '***',
+                    'is_active': llm_config.get('is_active', True)
+                },
                 'available_models': available_models
             })
         else:
@@ -750,11 +929,21 @@ def llm_config_endpoint():
             if data:
                 # Update global config
                 global llm_config
-                llm_config.update(data)
+                if 'model_name' in data:
+                    llm_config['model_name'] = data['model_name']
+                if 'api_key' in data:
+                    llm_config['api_key'] = data['api_key']
+                if 'is_active' in data:
+                    llm_config['is_active'] = data['is_active']
+                    
                 return jsonify({
                     'success': True,
                     'message': 'LLM configuration saved successfully',
-                    'config': llm_config
+                    'config': {
+                        'model_name': llm_config.get('model_name'),
+                        'api_key': '***' + llm_config.get('api_key', '')[-4:] if llm_config.get('api_key') and len(llm_config.get('api_key', '')) > 4 else '***',
+                        'is_active': llm_config.get('is_active', True)
+                    }
                 })
             else:
                 return jsonify({'error': 'No data provided'}), 400
