@@ -477,7 +477,15 @@ class AnalyticsManager {
     }
 }
 
-// Initialize analytics manager when DOM is loaded
+// Initialize analytics manager when DOM is loaded and auth is ready
 document.addEventListener('DOMContentLoaded', () => {
-    window.analyticsManager = new AnalyticsManager();
+    const initAnalytics = () => {
+        if (window.KIRO_AUTH_READY) {
+            window.analyticsManager = new AnalyticsManager();
+        } else {
+            // Wait for auth to be ready
+            setTimeout(initAnalytics, 50);
+        }
+    };
+    initAnalytics();
 });

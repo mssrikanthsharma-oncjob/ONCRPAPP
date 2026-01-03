@@ -344,9 +344,15 @@ class AdminPortal {
     }
 }
 
-// Initialize admin portal when DOM is loaded
+// Initialize admin portal when DOM is loaded and auth is ready
 document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('dashboard')) {
-        window.adminPortal = new AdminPortal();
-    }
+    const initAdmin = () => {
+        if (window.KIRO_AUTH_READY && document.getElementById('dashboard')) {
+            window.adminPortal = new AdminPortal();
+        } else if (!window.KIRO_AUTH_READY) {
+            // Wait for auth to be ready
+            setTimeout(initAdmin, 50);
+        }
+    };
+    initAdmin();
 });

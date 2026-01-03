@@ -73,8 +73,16 @@ class AuthService {
             const result = await response.json();
 
             if (response.ok) {
-                this.setAuth(result.token, result.user);
-                return { success: true, user: result.user };
+                // Handle both response formats (localhost uses data.token, vercel uses token)
+                const token = result.data?.token || result.token;
+                const user = result.data?.user || result.user;
+                
+                if (token && user) {
+                    this.setAuth(token, user);
+                    return { success: true, user: user };
+                } else {
+                    return { success: false, error: 'Invalid response format' };
+                }
             } else {
                 return { success: false, error: result.error || 'Login failed' };
             }

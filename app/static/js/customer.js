@@ -499,9 +499,15 @@ class CustomerPortal {
     }
 }
 
-// Initialize customer portal when DOM is loaded
+// Initialize customer portal when DOM is loaded and auth is ready
 document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('customer-portal')) {
-        window.customerPortal = new CustomerPortal();
-    }
+    const initCustomer = () => {
+        if (window.KIRO_AUTH_READY && document.getElementById('customer-portal')) {
+            window.customerPortal = new CustomerPortal();
+        } else if (!window.KIRO_AUTH_READY) {
+            // Wait for auth to be ready
+            setTimeout(initCustomer, 50);
+        }
+    };
+    initCustomer();
 });

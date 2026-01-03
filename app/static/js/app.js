@@ -333,7 +333,4 @@ class BookingApp {
     }
 }
 
-// Initialize app when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    window.app = new BookingApp();
-});
+// App initialization is handled in HTML template to control timing

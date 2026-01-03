@@ -514,9 +514,18 @@
         localStorage.removeItem('jwt_token');
         localStorage.removeItem('user');
         
+        // Prevent other modules from auto-initializing
+        window.KIRO_AUTH_READY = false;
+        
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize main app first
             window.bookingApp = new BookingApp();
+            
+            // Mark auth as ready after main app initializes
+            setTimeout(() => {
+                window.KIRO_AUTH_READY = true;
+            }, 100);
         });
     </script>
 </body>
