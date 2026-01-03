@@ -59,19 +59,19 @@ class CustomerService:
     @staticmethod
     def get_property_advice(advice_request):
         """Get property advice using OpenAI LLM."""
-        # Get active LLM configuration
-        llm_config = LLMConfig.get_active_config()
-        
-        if not llm_config:
-            return "LLM configuration not found. Please contact administrator to configure OpenAI settings."
-        
-        if not llm_config.api_key:
-            return "OpenAI API key not configured. Please contact administrator to set up the API key."
-        
-        if not OPENAI_AVAILABLE:
-            return "OpenAI library not installed. Please install the openai package to use LLM features."
-        
         try:
+            # Get active LLM configuration
+            llm_config = LLMConfig.get_active_config()
+            
+            if not llm_config:
+                return "LLM configuration not found. Please contact administrator to configure OpenAI settings."
+            
+            if not llm_config.api_key:
+                return "OpenAI API key not configured. Please contact administrator to set up the API key."
+            
+            if not OPENAI_AVAILABLE:
+                return "OpenAI library not installed. Please install the openai package to use LLM features."
+            
             # Initialize OpenAI client
             client = openai.OpenAI(api_key=llm_config.api_key)
             
@@ -125,19 +125,23 @@ Please provide comprehensive property advice addressing the customer's query. In
             return advice
             
         except openai.AuthenticationError as e:
+            print(f"OpenAI Authentication Error: {e}")
             return "Invalid OpenAI API key. Please contact administrator to verify the API key configuration."
         
         except openai.RateLimitError as e:
+            print(f"OpenAI Rate Limit Error: {e}")
             return "OpenAI API rate limit exceeded. Please try again in a few minutes or contact administrator."
         
         except openai.APIError as e:
+            print(f"OpenAI API Error: {e}")
             return f"OpenAI API error: {str(e)}. Please try again or contact administrator."
         
         except Exception as e:
-            # Log the error for debugging (keep minimal logging)
-            print(f"Error in get_property_advice: {str(e)}")
+            # Log the error for debugging
+            print(f"Unexpected error in get_property_advice: {str(e)}")
+            print(f"Error type: {type(e)}")
             
-            # Fallback to mock response if OpenAI fails
+            # Always return a fallback response instead of raising an exception
             return CustomerService._get_fallback_advice(advice_request)
     
     @staticmethod

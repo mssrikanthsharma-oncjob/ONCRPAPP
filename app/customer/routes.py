@@ -145,26 +145,41 @@ def get_property_advice():
             return jsonify({'error': 'User not found'}), 404
         
         # Use CustomerService to get advice (no email verification required)
-        advice = CustomerService.get_property_advice(advice_request)
+        try:
+            advice = CustomerService.get_property_advice(advice_request)
+        except Exception as service_error:
+            print(f"CustomerService error: {service_error}")
+            # Return fallback advice if service fails
+            advice = CustomerService._get_fallback_advice(advice_request)
         
         # Save enquiry
-        enquiry = CustomerEnquiry(
-            customer_id=user_id,
-            email=user.email or 'not_provided@example.com',
-            enquiry_type='advice',
-            advice_request=advice_request,
-            llm_response=advice
-        )
-        db.session.add(enquiry)
-        db.session.commit()
+        try:
+            enquiry = CustomerEnquiry(
+                customer_id=user_id,
+                email=user.email or 'not_provided@example.com',
+                enquiry_type='advice',
+                advice_request=advice_request,
+                llm_response=advice
+            )
+            db.session.add(enquiry)
+            db.session.commit()
+            enquiry_id = enquiry.id
+        except Exception as db_error:
+            print(f"Database error: {db_error}")
+            # Continue without saving enquiry if DB fails
+            enquiry_id = None
         
         return jsonify({
             'advice': advice,
-            'enquiry_id': enquiry.id
+            'enquiry_id': enquiry_id
         }), 200
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"Route error in get_property_advice: {str(e)}")
+        return jsonify({
+            'error': 'An error occurred while processing your request. Please try again.',
+            'advice': CustomerService._get_fallback_advice(data.get('advice_request', '') if 'data' in locals() else 'general advice')
+        }), 500
 
 
 @customer_bp.route('/generate-report', methods=['POST'])

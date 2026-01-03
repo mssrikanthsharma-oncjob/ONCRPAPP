@@ -43,12 +43,22 @@ def init_database():
         )
         db.session.add(customer_user)
     
+    # Create default LLM configuration if not exists
+    llm_config = LLMConfig.query.filter_by(is_active=True).first()
+    if not llm_config:
+        default_llm_config = LLMConfig(
+            model_name='gpt-3.5-turbo',
+            api_key='',  # Empty by default - admin needs to configure
+            is_active=True
+        )
+        db.session.add(default_llm_config)
+    
     # Commit users first to get their IDs
     try:
         db.session.commit()
     except Exception as e:
         db.session.rollback()
-        print(f"Error creating users: {e}")
+        print(f"Error creating users and config: {e}")
         raise
     
     # Always create dummy bookings (important for in-memory database)
