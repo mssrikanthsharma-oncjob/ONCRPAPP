@@ -4,6 +4,13 @@ import requests
 from datetime import datetime
 from app.models import CustomerEnquiry, LLMConfig
 
+# Import OpenAI
+try:
+    import openai
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+
 
 class CustomerService:
     """Service class for customer property operations."""
@@ -51,89 +58,130 @@ class CustomerService:
     
     @staticmethod
     def get_property_advice(advice_request):
-        """Get property advice using LLM."""
+        """Get property advice using OpenAI LLM."""
         # Get active LLM configuration
         llm_config = LLMConfig.get_active_config()
         
         if not llm_config:
-            return "LLM configuration not found. Please contact administrator."
+            return "LLM configuration not found. Please contact administrator to configure OpenAI settings."
+        
+        if not llm_config.api_key:
+            return "OpenAI API key not configured. Please contact administrator to set up the API key."
+        
+        if not OPENAI_AVAILABLE:
+            return "OpenAI library not installed. Please install the openai package to use LLM features."
         
         try:
-            # This is a placeholder implementation
-            # In a real application, you would call OpenAI API or other LLM service
+            # Initialize OpenAI client
+            client = openai.OpenAI(api_key=llm_config.api_key)
             
-            # Mock LLM response based on request
-            if 'investment' in advice_request.lower():
-                advice = """Based on your investment query, here are some key recommendations:
-
-1. **Location Analysis**: Focus on areas with upcoming infrastructure development like metro connectivity, IT hubs, and educational institutions.
-
-2. **Property Type**: For investment purposes, 2BHK and 3BHK apartments typically offer better rental yields and resale value.
-
-3. **Budget Allocation**: Consider allocating 70-80% of your budget to the property cost and keep 20-30% for registration, taxes, and furnishing.
-
-4. **Market Timing**: Current market conditions suggest it's a good time for investment with stable prices and low interest rates.
-
-5. **Legal Verification**: Always verify RERA registration, clear title, and approved building plans before investing.
-
-6. **Rental Potential**: Properties near IT corridors, hospitals, and educational institutions typically have higher rental demand.
-
-Would you like specific recommendations for any particular location or budget range?"""
+            # Create a comprehensive system prompt for property advisory
+            system_prompt = """You are an expert real estate advisor for ONC REALTY PARTNERS, a premium property advisory firm in India. 
             
-            elif 'first home' in advice_request.lower() or 'buying' in advice_request.lower():
-                advice = """Congratulations on planning to buy your first home! Here's comprehensive guidance:
+Your expertise includes:
+- Indian real estate market trends and regulations
+- Property investment strategies
+- Legal compliance (RERA, stamp duty, registration)
+- Location analysis and infrastructure development
+- Home loan processes and financial planning
+- Property valuation and market analysis
 
-1. **Financial Planning**: 
-   - Ensure your EMI doesn't exceed 40% of your monthly income
-   - Keep 20-25% ready for down payment
-   - Budget for additional costs (registration, stamp duty, legal fees)
+Guidelines for responses:
+- Provide practical, actionable advice
+- Consider Indian market conditions and regulations
+- Include specific recommendations when possible
+- Mention legal compliance requirements
+- Be professional yet approachable
+- Ask clarifying questions when needed
+- Provide structured responses with clear sections
 
-2. **Location Priorities**:
-   - Proximity to workplace (consider commute time and cost)
-   - Access to schools, hospitals, and shopping centers
-   - Public transportation connectivity
+Always prioritize customer safety and legal compliance in your recommendations."""
 
-3. **Property Checklist**:
-   - RERA registered projects
-   - Clear title and approved building plans
-   - Quality of construction and amenities
-   - Possession timeline and builder reputation
+            # Create user prompt with context
+            user_prompt = f"""Property Advisory Request: {advice_request}
 
-4. **Home Loan Tips**:
-   - Compare interest rates from multiple banks
-   - Check for pre-approved loan offers
-   - Consider floating vs fixed rate options
+Please provide comprehensive property advice addressing the customer's query. Include relevant market insights, legal considerations, financial planning tips, and actionable next steps where applicable."""
 
-5. **Future Considerations**:
-   - Resale value potential
-   - Rental income possibility
-   - Infrastructure development plans in the area
-
-Feel free to share your specific requirements for personalized advice!"""
+            # Make API call to OpenAI
+            response = client.chat.completions.create(
+                model=llm_config.model_name or "gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                max_tokens=1000,
+                temperature=0.7,
+                top_p=1.0,
+                frequency_penalty=0.0,
+                presence_penalty=0.0
+            )
             
-            else:
-                advice = f"""Thank you for your property inquiry. Based on your request: "{advice_request}"
-
-Here are some general recommendations:
-
-1. **Market Research**: Always research the local property market trends, average prices, and growth potential in your target area.
-
-2. **Legal Due Diligence**: Verify all legal documents, RERA registration, and clear title before making any decision.
-
-3. **Financial Planning**: Ensure you have adequate funds not just for the property cost but also for registration, taxes, and maintenance.
-
-4. **Location Analysis**: Consider factors like connectivity, infrastructure development, social amenities, and future growth prospects.
-
-5. **Professional Consultation**: Consider consulting with local real estate experts, legal advisors, and financial planners.
-
-For more specific advice, please provide details about your budget, preferred location, property type, and purpose (investment/residence).
-
-Would you like me to elaborate on any of these points?"""
+            # Extract the advice from the response
+            advice = response.choices[0].message.content.strip()
+            
+            # Add a professional footer
+            advice += "\n\n---\n*This advice is generated by ONC REALTY PARTNERS' AI advisory system. For personalized consultation, please contact our expert team.*"
             
             return advice
             
+        except openai.AuthenticationError:
+            return "Invalid OpenAI API key. Please contact administrator to verify the API key configuration."
+        
+        except openai.RateLimitError:
+            return "OpenAI API rate limit exceeded. Please try again in a few minutes or contact administrator."
+        
+        except openai.APIError as e:
+            return f"OpenAI API error: {str(e)}. Please try again or contact administrator."
+        
         except Exception as e:
-            return f"Error generating advice: {str(e)}. Please try again or contact support."
+            # Log the error for debugging
+            print(f"Error in get_property_advice: {str(e)}")
+            
+            # Fallback to mock response if OpenAI fails
+            return CustomerService._get_fallback_advice(advice_request)
+    
+    @staticmethod
+    def _get_fallback_advice(advice_request):
+        """Fallback advice when OpenAI is not available."""
+        if 'investment' in advice_request.lower():
+            return """**Investment Advisory (Fallback Mode)**
+
+Based on your investment query, here are key recommendations:
+
+1. **Location Analysis**: Focus on areas with upcoming infrastructure development
+2. **Property Type**: 2BHK and 3BHK apartments offer better rental yields
+3. **Budget Planning**: Allocate 70-80% for property, 20-30% for additional costs
+4. **Legal Verification**: Verify RERA registration and clear title
+5. **Market Timing**: Current conditions favor investment with stable prices
+
+*Note: This is a fallback response. For AI-powered personalized advice, please ensure OpenAI API is properly configured.*"""
+        
+        elif 'first home' in advice_request.lower() or 'buying' in advice_request.lower():
+            return """**First Home Buyer Guide (Fallback Mode)**
+
+Congratulations on planning your first home purchase!
+
+1. **Financial Planning**: EMI should not exceed 40% of monthly income
+2. **Location Priorities**: Consider commute, amenities, and connectivity
+3. **Legal Checklist**: RERA registration, clear title, approved plans
+4. **Home Loan**: Compare rates and consider pre-approval
+5. **Future Value**: Research resale potential and area development
+
+*Note: This is a fallback response. For AI-powered personalized advice, please ensure OpenAI API is properly configured.*"""
+        
+        else:
+            return f"""**Property Advisory (Fallback Mode)**
+
+Thank you for your inquiry: "{advice_request}"
+
+General recommendations:
+1. Research local market trends and pricing
+2. Verify all legal documents and RERA registration
+3. Plan finances including additional costs
+4. Consider location connectivity and amenities
+5. Consult with local real estate experts
+
+*Note: This is a fallback response. For AI-powered personalized advice, please ensure OpenAI API is properly configured in the admin panel.*"""
     
     @staticmethod
     def generate_report(customer_id, enquiry_ids):
